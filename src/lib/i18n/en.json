@@ -1,0 +1,49 @@
+{
+  "common": {
+    "login": "Login",
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "dashboard": "Dashboard",
+    "properties": "Properties",
+    "tenants": "Tenants",
+    "payments": "Payments",
+    "expenses": "Expenses",
+    "reports": "Reports",
+    "settings": "Settings",
+    "logout": "Logout",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "loading": "Loading..."
+  },
+  "landing": {
+    "badge": "Built for Benin landlords",
+    "title1": "Manage your rentals",
+    "title2": "with confidence",
+    "subtitle": "Track properties, tenants, and payments in one place. Stop chasing rent in spreadsheets — RentFlow keeps everything organized.",
+    "getStarted": "Get Started — Free",
+    "featuresTitle": "Everything you need to manage rent",
+    "feature1Title": "Manage Properties",
+    "feature1Desc": "Add all your buildings and track occupancy across each unit. Never lose sight of vacancies.",
+    "feature2Title": "Track Tenants",
+    "feature2Desc": "Keep tenant contact details, unit assignments, and rent amounts in one organized place.",
+    "feature3Title": "Monitor Payments",
+    "feature3Desc": "Record payments, flag overdue rent, and see your monthly revenue at a glance — in FCFA."
+  },
+  "dashboard": {
+    "greeting": "Bonjour",
+    "subtitle": "Here is a summary of your properties and rentals today.",
+    "totalProperties": "Total Properties",
+    "totalTenants": "Total Tenants",
+    "expectedRevenue": "Expected Revenue",
+    "collectedThisMonth": "Collected This Month",
+    "revenueOverview": "Revenue Overview",
+    "thisMonth": "This Month",
+    "quickActions": "Quick Actions",
+    "addNewProperty": "Add New Property",
+    "registerTenant": "Register Tenant",
+    "recordPayment": "Record Payment",
+    "chartsComingSoon": "Charts coming soon",
+    "chartsDesc": "Detailed financial analysis will appear here."
+  }
+}

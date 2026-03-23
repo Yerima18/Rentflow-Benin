@@ -1,0 +1,49 @@
+{
+  "common": {
+    "login": "Se connecter",
+    "signUp": "S'inscrire",
+    "signIn": "S'identifier",
+    "dashboard": "Tableau de Bord",
+    "properties": "Propriétés",
+    "tenants": "Locataires",
+    "payments": "Paiements",
+    "expenses": "Dépenses",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "loading": "Chargement..."
+  },
+  "landing": {
+    "badge": "Conçu pour les propriétaires au Bénin",
+    "title1": "Gérez vos locations",
+    "title2": "en toute sérénité",
+    "subtitle": "Suivez vos propriétés, locataires et paiements en un seul endroit. Fini les fichiers Excel — RentFlow organise tout pour vous.",
+    "getStarted": "Commencer — Gratuit",
+    "featuresTitle": "Tout ce dont vous avez besoin",
+    "feature1Title": "Gérer les Propriétés",
+    "feature1Desc": "Ajoutez tous vos bâtiments et suivez l'occupation de chaque unité. Ne perdez plus de vue vos locaux vacants.",
+    "feature2Title": "Suivre les Locataires",
+    "feature2Desc": "Gardez les coordonnées, l'affectation et les loyers de vos locataires dans un espace organisé.",
+    "feature3Title": "Suivre les Paiements",
+    "feature3Desc": "Enregistrez les paiements, signalez les retards et visualisez vos revenus mensuels en FCFA."
+  },
+  "dashboard": {
+    "greeting": "Bonjour",
+    "subtitle": "Voici un résumé de vos propriétés et locations d'aujourd'hui.",
+    "totalProperties": "Total de Propriétés",
+    "totalTenants": "Total de Locataires",
+    "expectedRevenue": "Revenu Attendu",
+    "collectedThisMonth": "Collecté ce Mois",
+    "revenueOverview": "Aperçu des Revenus",
+    "thisMonth": "Ce Mois",
+    "quickActions": "Actions Rapides",
+    "addNewProperty": "Nouvelle Propriété",
+    "registerTenant": "Nouveau Locataire",
+    "recordPayment": "Enregistrer Paiement",
+    "chartsComingSoon": "Graphiques à venir",
+    "chartsDesc": "L'analyse financière détaillée apparaîtra ici."
+  }
+}
