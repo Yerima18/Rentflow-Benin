@@ -48,21 +48,28 @@ cp .env.example .env
 ```
 
 ```env
-# PostgreSQL connection string (e.g. Neon, Supabase, Railway)
-DATABASE_URL="postgresql://user:password@host:5432/rentflow?sslmode=require"
+# Local PostgreSQL only. Replace with your own local development database.
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/rentflow_dev?schema=public"
 
-# Generate with: openssl rand -base64 32
-NEXTAUTH_SECRET="your-secret-here"
+# Local-only placeholder. Generate a real value with: openssl rand -base64 32
+NEXTAUTH_SECRET="replace-with-a-random-local-secret"
 
-# Your deployment URL (use http://localhost:3000 for local dev)
+# Local development URL
 NEXTAUTH_URL="http://localhost:3000"
 ```
+
+The values above are examples for local development only. Do not use them in
+production or commit your `.env` file.
 
 ### 4. Run database migrations
 
 ```bash
-npx prisma migrate dev
+npm run db:migrate:dev
 ```
+
+This applies the checked-in migrations to your local database. `npm run build`
+only builds the application and does not connect to PostgreSQL; migrations are
+an explicit step.
 
 ### 5. Start the development server
 
@@ -122,6 +129,7 @@ src/
     └── i18n/             # EN/FR dictionaries and LanguageProvider
 prisma/
 ├── schema.prisma         # Database models
+├── migrations/           # Versioned PostgreSQL schema changes
 └── seed.ts               # Optional seed data
 prisma.config.ts          # Prisma v7 datasource config
 ```
@@ -130,10 +138,27 @@ prisma.config.ts          # Prisma v7 datasource config
 
 This app is designed to deploy on **Vercel** with a managed PostgreSQL database (Neon or Supabase recommended).
 
-1. Push your code to GitHub
-2. Import the repo on [vercel.com](https://vercel.com)
-3. Add the three environment variables (`DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`)
-4. Deploy — Vercel will run `prisma generate` automatically via the `postinstall` script
+1. Import the repo on [vercel.com](https://vercel.com).
+2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in Vercel's **Production** environment. Use the production database URL and a newly generated secret; never use the local example values.
+3. Deploy. `vercel.json` selects `npm run vercel-build`: on production deployments it runs `prisma migrate deploy` before the normal build. Preview deployments build without running migrations. The `postinstall` script generates Prisma Client and does not need a database.
+
+### Existing production database
+
+The initial migration describes the schema that existed when migrations were
+introduced. A database previously created with `prisma db push` has no migration
+history, so do not run `npm run db:migrate:deploy` against it until you have
+verified that its schema matches `prisma/migrations/20261007202000_initial_schema/migration.sql`
+and taken a backup. For a matching existing database only, mark that initial
+migration as already applied once, using its production `DATABASE_URL` in a
+secure environment:
+
+```bash
+npx prisma migrate resolve --applied 20261007202000_initial_schema
+```
+
+Do not run this baseline command on a new or schema-mismatched database. New
+databases should use `npm run db:migrate:deploy` to create their schema from the
+versioned migrations.
 
 ## License
 
