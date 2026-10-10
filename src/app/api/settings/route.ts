@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { demoReadOnlyResponse, isDemoSession } from "@/lib/demo";
 
 export async function PUT(req: Request) {
   try {
@@ -11,6 +12,7 @@ export async function PUT(req: Request) {
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const body = await req.json();
     const { name, email, currentPassword, newPassword } = body;

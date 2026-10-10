@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { Building, Plus, Search } from "lucide-react";
 import Link from "next/link";
+import { useIsDemoUser } from "@/components/DemoMode";
 
 type Property = { id: string; name: string; address: string; units: number; _count: { tenants: number } };
 
 export default function PropertiesPage() {
+  const isDemo = useIsDemoUser();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,10 +40,12 @@ export default function PropertiesPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Properties</h1>
           <p className="text-slate-500 mt-2 text-lg">Manage your rental properties and units.</p>
         </div>
-        <Link href="/dashboard/properties/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-indigo-200 flex items-center transition-all">
-          <Plus size={20} className="mr-2" />
-          Add Property
-        </Link>
+        {!isDemo && (
+          <Link href="/dashboard/properties/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-indigo-200 flex items-center transition-all">
+            <Plus size={20} className="mr-2" />
+            Add Property
+          </Link>
+        )}
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -69,9 +73,7 @@ export default function PropertiesPage() {
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-2">No properties found</h3>
             <p className="text-slate-500 max-w-sm mb-8 text-lg">Get started by creating your first property to track rent and manage tenants.</p>
-            <Link href="/dashboard/properties/new" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-6 py-3 rounded-xl font-semibold transition-colors">
-              Add Property Now
-            </Link>
+            {!isDemo && <Link href="/dashboard/properties/new" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-6 py-3 rounded-xl font-semibold transition-colors">Add Property Now</Link>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -88,7 +90,7 @@ export default function PropertiesPage() {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((prop) => (
                   <tr key={prop.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-8 py-5 font-bold text-slate-900 text-base">{prop.name}</td>
+                    <td className="px-8 py-5 font-bold text-slate-900 text-base"><Link href={`/dashboard/properties/${prop.id}`} className="hover:text-indigo-700 hover:underline">{prop.name}</Link></td>
                     <td className="px-8 py-5 text-slate-600 text-sm">{prop.address}</td>
                     <td className="px-8 py-5 text-slate-900 font-semibold">{prop.units}</td>
                     <td className="px-8 py-5">
@@ -97,12 +99,12 @@ export default function PropertiesPage() {
                       </span>
                     </td>
                     <td className="px-8 py-5 text-right space-x-4">
-                      <button
+                      {!isDemo && <button
                         onClick={() => handleDelete(prop.id, prop.name)}
                         className="text-slate-400 hover:text-rose-600 text-sm font-bold transition-colors"
                       >
                         Delete
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 ))}

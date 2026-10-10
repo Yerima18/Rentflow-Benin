@@ -2,6 +2,34 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { demoReadOnlyResponse, isDemoMode, isDemoSession } from '@/lib/demo';
+import { getDemoProperty } from '@/lib/demo-data';
+
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { id } = await params;
+    if (isDemoMode() || isDemoSession(session)) {
+      const property = getDemoProperty(id);
+      return property
+        ? NextResponse.json(property)
+        : NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    const property = await prisma.property.findFirst({
+      where: { id, landlordId: (session.user as { id: string }).id },
+      include: { tenants: true, expenses: true },
+    });
+    return property
+      ? NextResponse.json(property)
+      : NextResponse.json({ error: 'Property not found' }, { status: 404 });
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -9,6 +37,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const { id } = await params;
     const body = await request.json();
@@ -49,6 +78,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const { id } = await params;
 

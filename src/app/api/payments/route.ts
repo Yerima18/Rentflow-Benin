@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { demoReadOnlyResponse, isDemoMode, isDemoSession } from '@/lib/demo';
+import { demoPayments } from '@/lib/demo-data';
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (isDemoMode() || isDemoSession(session)) {
+      return NextResponse.json(demoPayments);
     }
 
     const payments = await prisma.payment.findMany({
@@ -47,6 +53,7 @@ export async function POST(request: Request) {
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const body = await request.json();
     const { amount, status, month, tenantId } = body;

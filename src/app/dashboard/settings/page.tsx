@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { User, Lock, Save, ShieldCheck } from "lucide-react";
+import { DemoReadOnlyPanel, useIsDemoUser } from "@/components/DemoMode";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
   const { dict } = useLanguage();
+  const isDemo = useIsDemoUser();
   
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -19,6 +21,8 @@ export default function SettingsPage() {
     currentPassword: "",
     newPassword: "",
   });
+
+  if (isDemo) return <DemoReadOnlyPanel />;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

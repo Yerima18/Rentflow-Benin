@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { Users, Plus, Search } from "lucide-react";
 import Link from "next/link";
+import { useIsDemoUser } from "@/components/DemoMode";
 
 type Tenant = { id: string; fullName: string; phone: string; unitNumber: string; rentAmount: number; dueDate: number; propertyId: string; property: { name: string } };
 type Property = { id: string; name: string };
 
 export default function TenantsPage() {
+  const isDemo = useIsDemoUser();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,10 +49,9 @@ export default function TenantsPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Tenants</h1>
           <p className="text-slate-500 mt-2 text-lg">Manage your tenants and lease agreements in one place.</p>
         </div>
-        <Link href="/dashboard/tenants/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-indigo-200 flex items-center transition-all">
-          <Plus size={20} className="mr-2" />
-          Add Tenant
-        </Link>
+        {!isDemo && <Link href="/dashboard/tenants/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-indigo-200 flex items-center transition-all">
+          <Plus size={20} className="mr-2" /> Add Tenant
+        </Link>}
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -90,9 +91,7 @@ export default function TenantsPage() {
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-2">No tenants found</h3>
             <p className="text-slate-500 max-w-sm mb-8 text-lg">You haven&apos;t added any tenants yet.</p>
-            <Link href="/dashboard/tenants/new" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-6 py-3 rounded-xl font-semibold transition-colors">
-              Register a tenant now
-            </Link>
+            {!isDemo && <Link href="/dashboard/tenants/new" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-6 py-3 rounded-xl font-semibold transition-colors">Register a tenant now</Link>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -122,12 +121,12 @@ export default function TenantsPage() {
                       <div className="text-slate-500 text-xs font-medium uppercase tracking-wide mt-1">Due: Day {tenant.dueDate}</div>
                     </td>
                     <td className="px-8 py-5 text-right space-x-4">
-                      <button
+                      {!isDemo && <button
                         onClick={() => handleDelete(tenant.id, tenant.fullName)}
                         className="text-slate-400 hover:text-rose-600 text-sm font-bold transition-colors"
                       >
                         Delete
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 ))}
