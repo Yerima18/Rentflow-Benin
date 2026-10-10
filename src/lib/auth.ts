@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import prisma from "./prisma";
 import { isDemoMode } from "./demo";
-import { PUBLIC_DEMO_CREDENTIALS, PUBLIC_DEMO_SESSION_SECRET } from "./demo-credentials";
+import { PUBLIC_DEMO_SESSION_SECRET, PUBLIC_DEMO_USER } from "./demo-user";
 
 export const authOptions: AuthOptions = {
   // This public signing key is only used when the app has no database or is
@@ -11,6 +11,19 @@ export const authOptions: AuthOptions = {
   // only, and every mutation is rejected by the API.
   secret: process.env.NEXTAUTH_SECRET || (isDemoMode() ? PUBLIC_DEMO_SESSION_SECRET : undefined),
   providers: [
+    CredentialsProvider({
+      id: "demo-guest",
+      name: "Public demo guest",
+      credentials: {},
+      async authorize() {
+        if (!isDemoMode()) return null;
+
+        return {
+          ...PUBLIC_DEMO_USER,
+          isDemo: true,
+        };
+      },
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -22,20 +35,8 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        if (
-          credentials.email.trim().toLowerCase() === PUBLIC_DEMO_CREDENTIALS.email &&
-          credentials.password === PUBLIC_DEMO_CREDENTIALS.password
-        ) {
-          return {
-            id: PUBLIC_DEMO_CREDENTIALS.id,
-            email: PUBLIC_DEMO_CREDENTIALS.email,
-            name: PUBLIC_DEMO_CREDENTIALS.name,
-            isDemo: true,
-          };
-        }
-
         if (!process.env.DATABASE_URL || isDemoMode()) {
-          throw new Error("Use the public demo account to explore sample data.");
+          throw new Error("Use guest access to explore the public demo.");
         }
 
         const landlord = await prisma.landlord.findUnique({

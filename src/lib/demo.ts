@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 
-export { PUBLIC_DEMO_CREDENTIALS } from "./demo-credentials";
-
 export function isDemoMode() {
   return process.env.DEMO_MODE === "true" || !process.env.DATABASE_URL;
 }

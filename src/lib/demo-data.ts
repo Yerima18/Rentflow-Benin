@@ -1,6 +1,6 @@
-import { PUBLIC_DEMO_CREDENTIALS } from "@/lib/demo-credentials";
+import { PUBLIC_DEMO_USER } from "@/lib/demo-user";
 
-const DEMO_LANDLORD_ID = PUBLIC_DEMO_CREDENTIALS.id;
+const DEMO_LANDLORD_ID = PUBLIC_DEMO_USER.id;
 const demoPropertiesBase = [
   ["demo-property-01", "Villa des Cocotiers", "Fidjrossè, Cotonou", 4],
   ["demo-property-02", "Résidence du Phare", "Fidjrossè Plage, Cotonou", 6],

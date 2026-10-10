@@ -11,15 +11,15 @@ A property management web application for landlords in Benin. Manage properties,
 - **Expenses** — Log property expenses by category (Maintenance, Taxes, Utilities, Insurance, Other)
 - **Reports** — Financial overview with total revenue, expenses, and net profit
 - **Bilingual** — Full French and English interface (FR/EN switcher)
-- **Public demo** — Fictional Cotonou properties, tenants, rent payments, receipts, and expenses in a read-only sample account
+- **Public demo** — Passwordless guest access to fictional Cotonou properties, tenants, rent payments, receipts, and expenses in a read-only sample account
 
 ## Public demo
 
 Open the live demo at [rentflow-benin.vercel.app](https://rentflow-benin.vercel.app/)
-and choose **Explore the public demo** on the login page. The shared account is
-intentionally public: `demo@rentflow.bj` / `rentflow-demo-2026`. All names and
-records are fictional; demo mutations and registration are blocked at the API
-and hidden or replaced in the interface.
+and choose **Explore the public demo**, then **Continue as guest** on the login
+page. No shared email or password is needed. All names and records are
+fictional; demo mutations and registration are blocked at the API and hidden
+or replaced in the interface.
 
 For a Vercel deployment that already has a `DATABASE_URL`, set
 `DEMO_MODE=true` in the Production environment and redeploy before sharing the
@@ -84,9 +84,8 @@ DEMO_SEED_EMAIL="demo@example.invalid"
 DEMO_SEED_PASSWORD=""
 ```
 
-The values above are examples for local development only. The checked-in demo
-account is intentionally public and read-only; do not reuse its credentials for
-another service. Do not commit your `.env` file.
+The values above are examples for local development only. Public demo access is
+passwordless and read-only. Do not commit your `.env` file.
 
 ### 4. Run database migrations
 
@@ -192,8 +191,8 @@ Set `DEMO_MODE=true` in the Vercel **Production** environment, then redeploy.
 This selects only fictional in-app fixtures, blocks mutations and registration,
 and skips production migrations; `DATABASE_URL` is not required for the demo.
 The same mode is selected automatically if no database URL is present. The
-login page displays the public sample account. Do not add tenant records to a
-demo deployment.
+login page offers public guest access without a shared password. Do not add
+tenant records to a demo deployment.
 
 Set `NEXTAUTH_SECRET` to a generated value and `NEXTAUTH_URL` to the canonical
 site URL when available. Isolated demo mode has a public, read-only fallback

@@ -2,9 +2,6 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import net from "node:net";
 
-const DEMO_EMAIL = "demo@rentflow.bj";
-const DEMO_PASSWORD = "rentflow-demo-2026";
-
 function availablePort() {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -70,8 +67,8 @@ try {
   const loginPage = await fetch(`${baseUrl}/login`);
   const loginHtml = await loginPage.text();
   assert.equal(loginPage.status, 200, "login page should render");
-  assert.ok(loginHtml.includes(DEMO_EMAIL), "login page should publish the demo email");
-  assert.ok(loginHtml.includes(DEMO_PASSWORD), "login page should publish the demo password");
+  assert.ok(loginHtml.includes("Continue as guest"), "login page should offer passwordless guest access");
+  assert.ok(!loginHtml.includes("Mot de passe / Password:"), "demo login should not display shared password instructions");
 
   const registrationPage = await fetch(`${baseUrl}/register`);
   const registrationHtml = await registrationPage.text();
@@ -87,7 +84,7 @@ try {
   const { csrfToken } = await csrfResponse.json();
   assert.ok(csrfToken, "NextAuth should issue a CSRF token");
 
-  const signInResponse = await fetch(`${baseUrl}/api/auth/callback/credentials`, {
+  const signInResponse = await fetch(`${baseUrl}/api/auth/callback/demo-guest`, {
     method: "POST",
     redirect: "manual",
     headers: {
@@ -97,8 +94,6 @@ try {
     body: new URLSearchParams({
       csrfToken,
       callbackUrl: `${baseUrl}/dashboard`,
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
       json: "true",
     }),
   });
