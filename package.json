@@ -8,6 +8,7 @@
     "vercel-build": "node scripts/vercel-build.mjs",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
@@ -39,6 +40,7 @@
     "eslint-config-next": "16.1.6",
     "prisma": "^7.5.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

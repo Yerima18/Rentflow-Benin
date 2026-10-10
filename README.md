@@ -56,6 +56,10 @@ NEXTAUTH_SECRET="replace-with-a-random-local-secret"
 
 # Local development URL
 NEXTAUTH_URL="http://localhost:3000"
+
+# Optional local demo fixture credentials (set a password of 12+ characters)
+DEMO_SEED_EMAIL="demo@example.invalid"
+DEMO_SEED_PASSWORD=""
 ```
 
 The values above are examples for local development only. Do not use them in
@@ -70,6 +74,22 @@ npm run db:migrate:dev
 This applies the checked-in migrations to your local database. `npm run build`
 only builds the application and does not connect to PostgreSQL; migrations are
 an explicit step.
+
+To create the optional, clearly fictional demo landlord, properties, tenants,
+and sample payments after migrating the local database, set `DEMO_SEED_EMAIL`
+and `DEMO_SEED_PASSWORD` in `.env`, then run:
+
+```bash
+npm run db:seed
+```
+
+The seed uses stable fixture IDs and can be run repeatedly without adding
+duplicate demo records. Sample payment months track the current and previous
+month. It refuses production environments by default and refuses remote
+databases unless `DEMO_SEED_ALLOW_REMOTE_DATABASE=true` is explicitly set.
+Only enable remote seeding for a separate, isolated demo database; never point
+the seed at a database containing real landlords or tenants. Production also
+requires `DEMO_SEED_ALLOW_PRODUCTION=true` as a separate explicit opt-in.
 
 ### 5. Start the development server
 
@@ -159,6 +179,12 @@ npx prisma migrate resolve --applied 20261007202000_initial_schema
 Do not run this baseline command on a new or schema-mismatched database. New
 databases should use `npm run db:migrate:deploy` to create their schema from the
 versioned migrations.
+
+Do not run `npm run db:seed` against a production landlord database. The seed
+requires demo credentials in environment variables, uses clearly fictional
+names and addresses with non-dialable contact placeholders, and refuses
+production by default. Remote/production opt-ins are only for a separate demo
+database.
 
 ## License
 
