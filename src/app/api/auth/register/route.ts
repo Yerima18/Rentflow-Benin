@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
+import { isDemoMode } from '@/lib/demo';
 
 export async function POST(request: Request) {
   try {
+    if (isDemoMode()) {
+      return NextResponse.json(
+        { error: 'La démo publique est en lecture seule. / Public demo registration is disabled.' },
+        { status: 403 },
+      );
+    }
+
     const body = await request.json();
     const { name, email, password } = body;
 

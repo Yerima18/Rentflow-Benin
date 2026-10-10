@@ -5,8 +5,10 @@ import { ArrowLeft, User, Phone, MapPin, DollarSign, Calendar } from "lucide-rea
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DatePicker from "@/components/DatePicker";
+import { DemoReadOnlyPanel, useIsDemoUser } from "@/components/DemoMode";
 
 export default function NewTenantPage() {
+  const isDemo = useIsDemoUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [properties, setProperties] = useState<Array<{ id: string, name: string }>>([]);
@@ -57,6 +59,8 @@ export default function NewTenantPage() {
       setLoading(false);
     }
   };
+
+  if (isDemo) return <DemoReadOnlyPanel />;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">

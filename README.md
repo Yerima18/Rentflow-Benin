@@ -11,6 +11,25 @@ A property management web application for landlords in Benin. Manage properties,
 - **Expenses** — Log property expenses by category (Maintenance, Taxes, Utilities, Insurance, Other)
 - **Reports** — Financial overview with total revenue, expenses, and net profit
 - **Bilingual** — Full French and English interface (FR/EN switcher)
+- **Public demo** — Fictional Cotonou properties, tenants, rent payments, receipts, and expenses in a read-only sample account
+
+## Public demo
+
+Open the live demo at [rentflow-benin.vercel.app](https://rentflow-benin.vercel.app/)
+and choose **Explore the public demo** on the login page. The shared account is
+intentionally public: `demo@rentflow.bj` / `rentflow-demo-2026`. All names and
+records are fictional; demo mutations and registration are blocked at the API
+and hidden or replaced in the interface.
+
+For a Vercel deployment that already has a `DATABASE_URL`, set
+`DEMO_MODE=true` in the Production environment and redeploy before sharing the
+demo. This PR does not change Vercel settings or verify the live URL; confirm
+the homepage, sample login, dashboard, and property detail page after deploy.
+
+When `DEMO_MODE=true` (or when `DATABASE_URL` is absent), the app serves bundled
+fictional fixtures without connecting to PostgreSQL. The demo covers 12
+properties in Fidjrossè, Akpakpa, Cadjehoun, Calavi, and nearby Cotonou areas.
+These fixtures are not a database seed and contain no landlord or tenant data.
 
 ## Tech Stack
 
@@ -41,7 +60,7 @@ npm install
 
 ### 3. Configure environment variables
 
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
@@ -57,13 +76,17 @@ NEXTAUTH_SECRET="replace-with-a-random-local-secret"
 # Local development URL
 NEXTAUTH_URL="http://localhost:3000"
 
+# Use isolated sample data; no database is needed in this mode
+DEMO_MODE="true"
+
 # Optional local demo fixture credentials (set a password of 12+ characters)
 DEMO_SEED_EMAIL="demo@example.invalid"
 DEMO_SEED_PASSWORD=""
 ```
 
-The values above are examples for local development only. Do not use them in
-production or commit your `.env` file.
+The values above are examples for local development only. The checked-in demo
+account is intentionally public and read-only; do not reuse its credentials for
+another service. Do not commit your `.env` file.
 
 ### 4. Run database migrations
 
@@ -74,6 +97,10 @@ npm run db:migrate:dev
 This applies the checked-in migrations to your local database. `npm run build`
 only builds the application and does not connect to PostgreSQL; migrations are
 an explicit step.
+
+To use the normal database-backed app locally, create a local PostgreSQL
+database and set `DEMO_MODE=false` before applying migrations. Demo mode keeps
+the public sample account isolated from normal landlord accounts.
 
 To create the optional, clearly fictional demo landlord, properties, tenants,
 and sample payments after migrating the local database, set `DEMO_SEED_EMAIL`
@@ -156,11 +183,28 @@ prisma.config.ts          # Prisma v7 datasource config
 
 ## Deployment
 
-This app is designed to deploy on **Vercel** with a managed PostgreSQL database (Neon or Supabase recommended).
+This app can deploy on **Vercel** as a no-database read-only demo or as a
+database-backed landlord app.
+
+### Vercel read-only demo
+
+Set `DEMO_MODE=true` in the Vercel **Production** environment, then redeploy.
+This selects only fictional in-app fixtures, blocks mutations and registration,
+and skips production migrations; `DATABASE_URL` is not required for the demo.
+The same mode is selected automatically if no database URL is present. The
+login page displays the public sample account. Do not add tenant records to a
+demo deployment.
+
+Set `NEXTAUTH_SECRET` to a generated value and `NEXTAUTH_URL` to the canonical
+site URL when available. Isolated demo mode has a public, read-only fallback
+signing key so a missing secret cannot take the sample site offline; that
+fallback is not suitable for database-backed accounts.
+
+### Vercel database-backed app
 
 1. Import the repo on [vercel.com](https://vercel.com).
-2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in Vercel's **Production** environment. Use the production database URL and a newly generated secret; never use the local example values.
-3. Deploy. `vercel.json` selects `npm run vercel-build`: on production deployments it runs `prisma migrate deploy` before the normal build. Preview deployments build without running migrations. The `postinstall` script generates Prisma Client and does not need a database.
+2. Set `DEMO_MODE=false`, `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` in Vercel's **Production** environment. Use the production database URL and a newly generated secret; never use local example values.
+3. Deploy. `vercel.json` selects `npm run vercel-build`: production deployments outside demo mode run `prisma migrate deploy` before the normal build. Demo mode and preview builds do not run migrations. The `postinstall` script generates Prisma Client and does not need a database.
 
 ### Existing production database
 
@@ -185,6 +229,18 @@ requires demo credentials in environment variables, uses clearly fictional
 names and addresses with non-dialable contact placeholders, and refuses
 production by default. Remote/production opt-ins are only for a separate demo
 database.
+
+## Smoke checks
+
+`npm run smoke:demo` starts a production server without a database and checks
+the homepage, public sample login, dashboard, one property detail page, sample
+records, and rejected property/tenant/payment/expense/profile writes. CI runs
+the production build and these smoke checks on pull requests and pushes to
+`main`.
+
+The public demo uses bundled fixtures, not a live or seeded database. A
+database-backed deployment, its credentials, migration baseline, and the live
+Vercel deployment must be verified separately before real landlord use.
 
 ## License
 

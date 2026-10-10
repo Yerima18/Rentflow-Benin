@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { demoReadOnlyResponse, isDemoSession } from '@/lib/demo';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -9,6 +10,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const { id } = await params;
     const body = await request.json();
@@ -64,6 +66,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const { id } = await params;
 

@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Home } from "lucide-react";
+import { PUBLIC_DEMO_CREDENTIALS } from "@/lib/demo-credentials";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,6 +49,23 @@ export default function LoginPage() {
           </div>
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Welcome Back</h2>
           <p className="text-gray-500 text-center mb-8">Sign in to manage your properties</p>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 mb-6">
+            <p className="font-bold">Démo publique en lecture seule · Public read-only demo</p>
+            <p className="mt-2">Email: <code>{PUBLIC_DEMO_CREDENTIALS.email}</code></p>
+            <p>Mot de passe / Password: <code>{PUBLIC_DEMO_CREDENTIALS.password}</code></p>
+            <p className="mt-2">Données fictives; les modifications sont désactivées. / Fictional data; changes are disabled.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail(PUBLIC_DEMO_CREDENTIALS.email);
+                setPassword(PUBLIC_DEMO_CREDENTIALS.password);
+              }}
+              className="mt-3 font-semibold text-blue-700 hover:underline"
+            >
+              Use the demo account
+            </button>
+          </div>
 
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 text-center">

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { PlusCircle, Trash2, PieChart } from "lucide-react";
+import { useIsDemoUser } from "@/components/DemoMode";
 
 type Expense = {
   id: string;
@@ -16,6 +17,7 @@ type Expense = {
 
 export default function ExpensesPage() {
   const { dict } = useLanguage();
+  const isDemo = useIsDemoUser();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,13 +59,13 @@ export default function ExpensesPage() {
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{dict.common.expenses}</h1>
         </div>
-        <Link
+        {!isDemo && <Link
           href="/dashboard/expenses/new"
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-colors flex items-center space-x-2"
         >
           <PlusCircle size={20} />
           <span className="hidden sm:inline">Add Expense</span>
-        </Link>
+        </Link>}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -74,12 +76,12 @@ export default function ExpensesPage() {
             <PieChart size={48} className="text-slate-300 mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">No expenses recorded</h3>
             <p className="text-slate-500 mb-6">Track your property maintenance and tax costs here.</p>
-            <Link
+            {!isDemo && <Link
               href="/dashboard/expenses/new"
               className="text-indigo-600 font-semibold hover:text-indigo-700"
             >
               Add your first expense &rarr;
-            </Link>
+            </Link>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -109,13 +111,13 @@ export default function ExpensesPage() {
                       {expense.amount.toLocaleString()} FCFA
                     </td>
                     <td className="p-4 text-right">
-                      <button
+                      {!isDemo && <button
                         onClick={() => deleteExpense(expense.id)}
                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                         title={dict.common.delete}
                       >
                         <Trash2 size={18} />
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 ))}

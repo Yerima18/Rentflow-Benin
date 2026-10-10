@@ -4,8 +4,10 @@ import { useState } from "react";
 import { ArrowLeft, Home, MapPin, Hash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DemoReadOnlyPanel, useIsDemoUser } from "@/components/DemoMode";
 
 export default function NewPropertyPage() {
+  const isDemo = useIsDemoUser();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,6 +39,8 @@ export default function NewPropertyPage() {
       setLoading(false);
     }
   };
+
+  if (isDemo) return <DemoReadOnlyPanel />;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in duration-500">

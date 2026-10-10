@@ -6,8 +6,10 @@ import { Building, Users, CreditCard } from "lucide-react";
 import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LanguageSwitcher } from "@/lib/i18n/LanguageSwitcher";
+import { isDemoMode } from "@/lib/demo";
 
 export default async function Home() {
+  const demoMode = isDemoMode();
   const session = await getServerSession(authOptions);
   if (session) redirect("/dashboard");
 
@@ -30,9 +32,11 @@ export default async function Home() {
           <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
             {dict.common.login}
           </Link>
-          <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition-colors">
-            {dict.common.signUp}
-          </Link>
+          {!demoMode && (
+            <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition-colors">
+              {dict.common.signUp}
+            </Link>
+          )}
         </div>
       </nav>
 
@@ -49,9 +53,15 @@ export default async function Home() {
           {dict.landing.subtitle}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all">
-            {dict.landing.getStarted}
-          </Link>
+          {demoMode ? (
+            <Link href="/login" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all">
+              Explore the public demo
+            </Link>
+          ) : (
+            <Link href="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all">
+              {dict.landing.getStarted}
+            </Link>
+          )}
           <Link href="/login" className="w-full sm:w-auto border border-gray-300 hover:border-gray-400 text-gray-700 px-8 py-4 rounded-xl font-bold text-lg transition-all">
             {dict.common.signIn}
           </Link>
@@ -105,8 +115,8 @@ export default async function Home() {
                 </li>
               ))}
             </ul>
-            <Link href="/register" className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors">
-              Get Started
+            <Link href={demoMode ? "/login" : "/register"} className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors">
+              {demoMode ? "Explore the demo" : "Get Started"}
             </Link>
           </div>
         </div>
