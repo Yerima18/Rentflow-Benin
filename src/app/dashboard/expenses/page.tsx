@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { PlusCircle, Trash2, PieChart } from "lucide-react";
+import { formatXof } from "@/lib/money";
 
 type Expense = {
   id: string;
@@ -15,7 +16,7 @@ type Expense = {
 };
 
 export default function ExpensesPage() {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -106,7 +107,7 @@ export default function ExpensesPage() {
                     </td>
                     <td className="p-4 text-slate-600">{expense.description}</td>
                     <td className="p-4 text-right font-semibold text-rose-600">
-                      {expense.amount.toLocaleString()} FCFA
+                      {formatXof(expense.amount, locale)}
                     </td>
                     <td className="p-4 text-right">
                       <button

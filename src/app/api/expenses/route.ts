@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { parseXofAmount } from '@/lib/money';
 
 export async function GET() {
   try {
@@ -41,8 +42,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { amount, date, description, category, propertyId } = body;
 
-    if (!amount || !description || !category || !propertyId) {
+    if (amount === undefined || amount === null || !description || !category || !propertyId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const parsedAmount = parseXofAmount(amount);
+    if (parsedAmount === null) {
+      return NextResponse.json({ error: 'Amount must be a positive whole XOF amount' }, { status: 400 });
     }
 
     // Verify property belongs to landlord
@@ -59,7 +65,7 @@ export async function POST(request: Request) {
 
     const expense = await prisma.expense.create({
       data: {
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         date: date ? new Date(date) : new Date(),
         description,
         category,

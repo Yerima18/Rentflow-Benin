@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { parseXofAmount } from '@/lib/money';
 
 export async function GET(request: Request) {
   try {
@@ -49,8 +50,13 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { fullName, phone, unitNumber, rentAmount, dueDate, propertyId, leaseStart } = body;
 
-    if (!fullName || !phone || !unitNumber || !rentAmount || !dueDate || !propertyId) {
+    if (!fullName || !phone || !unitNumber || rentAmount === undefined || rentAmount === null || !dueDate || !propertyId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const parsedRentAmount = parseXofAmount(rentAmount);
+    if (parsedRentAmount === null) {
+      return NextResponse.json({ error: 'Rent amount must be a positive whole XOF amount' }, { status: 400 });
     }
 
     // Verify property belongs to landlord
@@ -65,12 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Property not found or unauthorized' }, { status: 404 });
     }
 
-    const parsedRentAmount = parseFloat(rentAmount);
     const parsedDueDate = parseInt(dueDate);
-
-    if (isNaN(parsedRentAmount) || parsedRentAmount <= 0) {
-      return NextResponse.json({ error: 'Rent amount must be a positive number' }, { status: 400 });
-    }
     if (isNaN(parsedDueDate) || parsedDueDate < 1 || parsedDueDate > 31) {
       return NextResponse.json({ error: 'Due date must be between 1 and 31' }, { status: 400 });
     }

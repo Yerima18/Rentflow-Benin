@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { CreditCard, Plus, Search, X, MessageCircle } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { formatXof } from "@/lib/money";
 
 type Payment = { id: string; amount: number; status: string; month: string; date: string; tenant: { fullName: string; unitNumber: string; property: { name: string } } };
 type Tenant = { id: string; fullName: string; unitNumber: string; property: { name: string } };
@@ -23,6 +25,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function PaymentsPage() {
+  const { locale } = useLanguage();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +66,7 @@ export default function PaymentsPage() {
       const res = await fetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...recordForm, amount: parseFloat(recordForm.amount) }),
+        body: JSON.stringify(recordForm),
       });
       const data = await res.json();
       if (!res.ok) { setRecordError(data.error || 'Failed to record payment'); return; }
@@ -92,7 +95,7 @@ export default function PaymentsPage() {
       const res = await fetch(`/api/payments/${editPayment.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: editStatus, amount: parseFloat(editAmount) }),
+        body: JSON.stringify({ status: editStatus, amount: editAmount }),
       });
       if (res.ok) { setEditPayment(null); fetchData(); }
     } finally {
@@ -106,7 +109,7 @@ export default function PaymentsPage() {
   );
 
   const generateWhatsAppLink = (p: Payment) => {
-    const text = `Bonjour ${p.tenant?.fullName}, votre paiement de loyer de ${p.amount.toLocaleString()} FCFA pour le mois de ${p.month} a bien été reçu pour l'unité ${p.tenant?.unitNumber} (${p.tenant?.property?.name}). Merci!`;
+    const text = `Bonjour ${p.tenant?.fullName}, votre paiement de loyer de ${formatXof(p.amount, locale)} pour le mois de ${p.month} a bien été reçu pour l'unité ${p.tenant?.unitNumber} (${p.tenant?.property?.name}). Merci!`;
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   };
 
@@ -182,7 +185,7 @@ export default function PaymentsPage() {
                       <div className="text-slate-500 text-sm">{payment.tenant?.property?.name} (Unit {payment.tenant?.unitNumber})</div>
                     </td>
                     <td className="px-8 py-5 text-base font-bold text-indigo-600">
-                      {payment.amount.toLocaleString()} FCFA
+                      {formatXof(payment.amount, locale)}
                     </td>
                     <td className="px-8 py-5">
                       {getStatusBadge(payment.status)}
@@ -250,7 +253,8 @@ export default function PaymentsPage() {
                   value={recordForm.amount}
                   onChange={e => setRecordForm(f => ({ ...f, amount: e.target.value }))}
                   required
-                  min={0}
+                  min={1}
+                  step={1}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
                   placeholder="e.g. 75000"
                 />
@@ -313,7 +317,8 @@ export default function PaymentsPage() {
                   value={editAmount}
                   onChange={e => setEditAmount(e.target.value)}
                   required
-                  min={0}
+                  min={1}
+                  step={1}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
                 />
               </div>

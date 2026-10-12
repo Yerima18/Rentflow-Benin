@@ -134,7 +134,7 @@ export default function NewExpensePage() {
                 name="amount"
                 type="number"
                 required
-                min="0"
+                min="1"
                 step="1"
                 placeholder="25000"
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
