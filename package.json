@@ -9,6 +9,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "test": "tsx --test src/lib/money.test.ts",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"

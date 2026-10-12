@@ -156,6 +156,7 @@ export default function NewTenantPage() {
                     type="number"
                     required
                     min="1"
+                    step="1"
                     placeholder="e.g. 150000"
                     className="block w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white transition-all outline-none"
                     value={formData.rentAmount}
