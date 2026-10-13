@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { demoReadOnlyResponse, isDemoSession } from '@/lib/demo';
+import { parseXofAmount } from '@/lib/money';
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,16 +17,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const body = await request.json();
     const { fullName, phone, unitNumber, rentAmount, dueDate, leaseStart } = body;
 
-    if (!fullName || !phone || !unitNumber || !rentAmount || !dueDate) {
+    if (!fullName || !phone || !unitNumber || rentAmount === undefined || rentAmount === null || !dueDate) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const parsedRentAmount = parseFloat(rentAmount);
+    const parsedRentAmount = parseXofAmount(rentAmount);
+    if (parsedRentAmount === null) {
+      return NextResponse.json({ error: 'Rent amount must be a positive whole XOF amount' }, { status: 400 });
+    }
+
     const parsedDueDate = parseInt(dueDate);
 
-    if (isNaN(parsedRentAmount) || parsedRentAmount <= 0) {
-      return NextResponse.json({ error: 'Rent amount must be a positive number' }, { status: 400 });
-    }
     if (isNaN(parsedDueDate) || parsedDueDate < 1 || parsedDueDate > 31) {
       return NextResponse.json({ error: 'Due date must be between 1 and 31' }, { status: 400 });
     }

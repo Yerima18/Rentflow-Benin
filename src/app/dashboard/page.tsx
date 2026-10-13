@@ -5,8 +5,11 @@ import { useEffect, useState } from "react";
 import { Building, Users, CreditCard, TrendingUp, DollarSign, PlusCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useIsDemoUser } from "@/components/DemoMode";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { formatXof } from "@/lib/money";
 
 export default function DashboardPage() {
+  const { locale } = useLanguage();
   const { data: session } = useSession();
   const isDemo = useIsDemoUser();
   const [stats, setStats] = useState({
@@ -72,8 +75,8 @@ export default function DashboardPage() {
   const statCards = [
     { name: "Total Properties", value: stats.properties, icon: Building, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
     { name: "Total Tenants", value: stats.tenants, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-    { name: "Expected Revenue", value: `${stats.monthlyRevenue.toLocaleString()} FCFA`, icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
-    { name: "Collected This Month", value: `${stats.collectedThisMonth.toLocaleString()} FCFA`, icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+    { name: "Expected Revenue", value: formatXof(stats.monthlyRevenue, locale), icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
+    { name: "Collected This Month", value: formatXof(stats.collectedThisMonth, locale), icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
   ];
 
   return (
@@ -121,11 +124,11 @@ export default function DashboardPage() {
             <div className="flex justify-between items-end mb-2">
               <div>
                 <p className="text-sm font-medium text-slate-500">Collected Revenue</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.collectedThisMonth.toLocaleString()} FCFA</p>
+                <p className="text-2xl font-bold text-slate-900">{formatXof(stats.collectedThisMonth, locale)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-slate-500">Total Expenses</p>
-                <p className="text-2xl font-bold text-rose-600">{stats.expensesThisMonth.toLocaleString()} FCFA</p>
+                <p className="text-2xl font-bold text-rose-600">{formatXof(stats.expensesThisMonth, locale)}</p>
               </div>
             </div>
             
@@ -144,7 +147,7 @@ export default function DashboardPage() {
             <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-100">
               <span className="font-semibold text-slate-700">Net Profit</span>
               <span className={`text-xl font-black ${stats.collectedThisMonth >= stats.expensesThisMonth ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {(stats.collectedThisMonth - stats.expensesThisMonth).toLocaleString()} FCFA
+                {formatXof(stats.collectedThisMonth - stats.expensesThisMonth, locale)}
               </span>
             </div>
           </div>

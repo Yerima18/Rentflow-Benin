@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { PieChart, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { formatXof } from "@/lib/money";
 
 export default function ReportsPage() {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState({
     totalRevenue: 0,
@@ -78,7 +79,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">All-Time Revenue</p>
-            <p className="text-2xl font-bold text-slate-900">{report.totalRevenue.toLocaleString()} FCFA</p>
+            <p className="text-2xl font-bold text-slate-900">{formatXof(report.totalRevenue, locale)}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 flex items-center space-x-4">
@@ -87,7 +88,7 @@ export default function ReportsPage() {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">All-Time Expenses</p>
-            <p className="text-2xl font-bold text-slate-900">{report.totalExpenses.toLocaleString()} FCFA</p>
+            <p className="text-2xl font-bold text-slate-900">{formatXof(report.totalExpenses, locale)}</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100 flex items-center space-x-4">
@@ -97,7 +98,7 @@ export default function ReportsPage() {
           <div>
             <p className="text-sm font-medium text-slate-500">Net Profit</p>
             <p className={`text-2xl font-bold ${report.netProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-              {report.netProfit.toLocaleString()} FCFA
+              {formatXof(report.netProfit, locale)}
             </p>
           </div>
         </div>
@@ -114,7 +115,7 @@ export default function ReportsPage() {
               .map(([category, amount]) => (
               <div key={category} className="flex justify-between items-center p-4 bg-slate-50 rounded-xl">
                 <span className="font-semibold text-slate-700">{category}</span>
-                <span className="font-bold text-rose-600">{amount.toLocaleString()} FCFA</span>
+                <span className="font-bold text-rose-600">{formatXof(amount, locale)}</span>
               </div>
             ))}
           </div>

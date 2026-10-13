@@ -223,6 +223,11 @@ Do not run this baseline command on a new or schema-mismatched database. New
 databases should use `npm run db:migrate:deploy` to create their schema from the
 versioned migrations.
 
+The XOF migration converts rent, payment, and expense values to whole FCFA
+amounts by rounding any legacy fractional values to the nearest franc. Back up
+an existing database before deployment; values outside PostgreSQL `INTEGER`
+range stop the migration for manual review instead of being truncated.
+
 Do not run `npm run db:seed` against a production landlord database. The seed
 requires demo credentials in environment variables, uses clearly fictional
 names and addresses with non-dialable contact placeholders, and refuses

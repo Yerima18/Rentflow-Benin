@@ -30,7 +30,7 @@ model Tenant {
   fullName   String
   phone      String
   unitNumber String
-  rentAmount Float
+  rentAmount Int
   dueDate    Int // Day of the month (e.g., 1-31)
   leaseStart DateTime? // Optional lease start date
   propertyId String
@@ -40,7 +40,7 @@ model Tenant {
 
 model Payment {
   id       String   @id @default(cuid())
-  amount   Float
+  amount   Int
   date     DateTime @default(now())
   status   String // 'PAID', 'PENDING', 'OVERDUE'
   month    String // e.g., "2023-10"
@@ -50,7 +50,7 @@ model Payment {
 
 model Expense {
   id          String   @id @default(cuid())
-  amount      Float
+  amount      Int
   date        DateTime @default(now())
   description String
   category    String // e.g., "Maintenance", "Taxes", "Utilities", "Other"

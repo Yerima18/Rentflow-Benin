@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { demoReadOnlyResponse, isDemoMode, isDemoSession } from '@/lib/demo';
 import { demoPayments } from '@/lib/demo-data';
+import { isPaymentMonth, isPaymentStatus, parseXofAmount } from '@/lib/money';
 
 export async function GET() {
   try {
@@ -58,8 +59,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { amount, status, month, tenantId } = body;
 
-    if (!amount || !status || !month || !tenantId) {
+    if (!tenantId || !status || !month || amount === undefined || amount === null) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const parsedAmount = parseXofAmount(amount);
+    if (parsedAmount === null) {
+      return NextResponse.json({ error: 'Amount must be a positive whole XOF amount' }, { status: 400 });
+    }
+    if (!isPaymentStatus(status)) {
+      return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
+    }
+    if (!isPaymentMonth(month)) {
+      return NextResponse.json({ error: 'Month must use YYYY-MM with a valid month' }, { status: 400 });
     }
 
     // Verify tenant belongs to landlord's property
@@ -78,7 +90,7 @@ export async function POST(request: Request) {
 
     const payment = await prisma.payment.create({
       data: {
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         status,
         month,
         tenantId,
