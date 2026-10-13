@@ -4,6 +4,8 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import { forwardRef } from "react";
+import { enUS, fr } from "date-fns/locale";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 interface Props {
   selected: Date | null;
@@ -45,6 +47,8 @@ export default function DatePicker({
   minDate,
   maxDate,
 }: Props) {
+  const { locale } = useLanguage();
+
   return (
     <div className="date-picker-wrapper">
       <style>{`
@@ -64,6 +68,7 @@ export default function DatePicker({
       <ReactDatePicker
         selected={selected}
         onChange={onChange}
+        locale={locale === "fr" ? fr : enUS}
         dateFormat={dateFormat || (showMonthYearPicker ? "MMMM yyyy" : "dd/MM/yyyy")}
         showMonthYearPicker={showMonthYearPicker}
         placeholderText={placeholderText}

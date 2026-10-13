@@ -100,7 +100,12 @@ try {
   updateCookies(jar, signInResponse);
   assert.ok(signInResponse.status === 200 || signInResponse.status === 302, `demo login should succeed (received ${signInResponse.status})`);
 
-  const authenticatedHeaders = { cookie: cookieHeader(jar) };
+  const headersForLocale = (locale) => {
+    const localeJar = new Map(jar);
+    localeJar.set("NEXT_LOCALE", locale);
+    return { cookie: cookieHeader(localeJar) };
+  };
+  const authenticatedHeaders = headersForLocale("fr");
   const sessionResponse = await fetch(`${baseUrl}/api/auth/session`, { headers: authenticatedHeaders });
   const session = await sessionResponse.json();
   assert.equal(session.user?.isDemo, true, "session should be marked as the isolated demo account");
@@ -134,7 +139,10 @@ try {
   const dashboard = await fetch(`${baseUrl}/dashboard`, { headers: authenticatedHeaders });
   const dashboardHtml = await dashboard.text();
   assert.equal(dashboard.status, 200, "demo account should open the dashboard");
-  assert.ok(dashboardHtml.includes("Read-only demo"), "dashboard should label the sample data as read-only");
+  assert.ok(dashboardHtml.includes('<html lang="fr">'), "French selection should persist into the authenticated app");
+  assert.ok(dashboardHtml.includes("Démo en lecture seule"), "dashboard should show the French read-only notice");
+  assert.ok(dashboardHtml.includes("Voici un résumé de vos propriétés"), "dashboard summary should render in French");
+  assert.ok(!dashboardHtml.includes("Here is a summary of your properties"), "French dashboard should not mix in English summary text");
   for (const writeAction of ["Add New Property", "Register Tenant", "Record Payment"]) {
     assert.ok(!dashboardHtml.includes(writeAction), `demo dashboard should hide ${writeAction}`);
   }
@@ -142,7 +150,7 @@ try {
   const propertyList = await fetch(`${baseUrl}/dashboard/properties`, { headers: authenticatedHeaders });
   const propertyListHtml = await propertyList.text();
   assert.equal(propertyList.status, 200, "demo account should open the property list");
-  assert.ok(propertyListHtml.includes("Read-only demo"), "property list should label demo data as read-only");
+  assert.ok(propertyListHtml.includes("Démo en lecture seule"), "property list should label demo data as read-only in French");
   assert.ok(!propertyListHtml.includes("Add Property"), "demo property list should hide property creation");
   assert.ok(!propertyListHtml.includes(">Delete<"), "demo property list should hide property deletion");
 
@@ -155,7 +163,7 @@ try {
     const response = await fetch(`${baseUrl}${path}`, { headers: authenticatedHeaders });
     const html = await response.text();
     assert.equal(response.status, 200, `demo account should open the ${name} page`);
-    assert.ok(html.includes("Read-only demo"), `${name} page should label demo data as read-only`);
+    assert.ok(html.includes("Démo en lecture seule"), `${name} page should label demo data as read-only in French`);
     for (const writeControl of writeControls) {
       assert.ok(!html.includes(writeControl), `demo ${name} page should hide ${writeControl}`);
     }
@@ -170,8 +178,30 @@ try {
     const response = await fetch(`${baseUrl}${path}`, { headers: authenticatedHeaders });
     const html = await response.text();
     assert.equal(response.status, 200, `demo account should open the ${name} read-only notice`);
-    assert.ok(html.includes("Read-only demo"), `${name} creation route should explain demo changes are disabled`);
+    assert.ok(html.includes("Démo en lecture seule"), `${name} creation route should explain demo changes are disabled in French`);
     assert.ok(!html.includes(formTitle), `${name} creation form should not render in demo mode`);
+  }
+
+  const localeFlowChecks = [
+    ["/dashboard", "Voici un résumé de vos propriétés", "Here is a summary of your properties"],
+    ["/dashboard/properties", "Gérez vos biens locatifs", "Manage your rental properties"],
+    ["/dashboard/tenants", "Gérez vos locataires", "Manage your tenants"],
+    ["/dashboard/payments", "Suivez les loyers", "Track rent payments"],
+  ];
+  const englishHeaders = headersForLocale("en");
+  for (const [path, frenchText, englishText] of localeFlowChecks) {
+    const frenchResponse = await fetch(`${baseUrl}${path}`, { headers: authenticatedHeaders });
+    const frenchHtml = await frenchResponse.text();
+    assert.equal(frenchResponse.status, 200, `${path} should render in French`);
+    assert.ok(frenchHtml.includes(frenchText), `${path} should contain its French copy`);
+    assert.ok(!frenchHtml.includes(englishText), `${path} should not mix English copy into French`);
+
+    const englishResponse = await fetch(`${baseUrl}${path}`, { headers: englishHeaders });
+    const englishHtml = await englishResponse.text();
+    assert.equal(englishResponse.status, 200, `${path} should render in English`);
+    assert.ok(englishHtml.includes('<html lang="en">'), `${path} should retain the English locale cookie`);
+    assert.ok(englishHtml.includes(englishText), `${path} should contain its English copy`);
+    assert.ok(!englishHtml.includes(frenchText), `${path} should not mix French copy into English`);
   }
 
   const propertiesResponse = await fetch(`${baseUrl}/api/properties`, { headers: authenticatedHeaders });

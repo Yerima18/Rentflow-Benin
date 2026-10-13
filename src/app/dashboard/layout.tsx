@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Providers } from "@/components/Providers";
+import { cookies } from "next/headers";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export default async function DashboardLayout({
   children,
@@ -16,6 +18,9 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "fr";
+  const dict = await getDictionary(locale);
   const isDemo = Boolean((session.user as { isDemo?: boolean }).isDemo);
 
   return (
@@ -26,8 +31,8 @@ export default async function DashboardLayout({
           <Navbar />
           {isDemo && (
             <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-950" role="status">
-              <strong>Démo en lecture seule · Read-only demo.</strong>{" "}
-              Données fictives de Cotonou; les modifications sont désactivées. / Fictional Cotonou sample data; changes are disabled.
+              <strong>{dict.demo.bannerTitle}</strong>{" "}
+              {dict.demo.bannerBody}
             </div>
           )}
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 md:p-8">

@@ -1,36 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { CreditCard, Plus, Search, X, MessageCircle } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
 import { useIsDemoUser } from "@/components/DemoMode";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatXof } from "@/lib/money";
+import { formatMessage } from "@/lib/i18n/formatMessage";
 
 type Payment = { id: string; amount: number; status: string; month: string; date: string; receiptNumber?: string | null; tenant: { fullName: string; unitNumber: string; property: { name: string } } };
 type Tenant = { id: string; fullName: string; unitNumber: string; property: { name: string } };
 
 const STATUSES = ["PAID", "PENDING", "OVERDUE"] as const;
 
-const getStatusBadge = (status: string) => {
+function formatPaymentMonth(month: string, locale: "en" | "fr") {
+  const [year, monthNumber] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, monthNumber - 1, 15));
+}
+
+const getStatusBadge = (status: string, labels: { paid: string; pending: string; overdue: string; unknownStatus: string }) => {
   switch (status) {
     case 'PAID':
-      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 uppercase tracking-wider">Paid</span>;
+      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 uppercase tracking-wider">{labels.paid}</span>;
     case 'PENDING':
-      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 uppercase tracking-wider">Pending</span>;
+      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 uppercase tracking-wider">{labels.pending}</span>;
     case 'OVERDUE':
-      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-600/20 uppercase tracking-wider">Overdue</span>;
+      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-600/20 uppercase tracking-wider">{labels.overdue}</span>;
     default:
-      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-slate-50 text-slate-700 ring-1 ring-slate-600/20 uppercase tracking-wider">{status}</span>;
+      return <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-slate-50 text-slate-700 ring-1 ring-slate-600/20 uppercase tracking-wider">{labels.unknownStatus}</span>;
   }
 };
 
 export default function PaymentsPage() {
   const isDemo = useIsDemoUser();
-  const { locale } = useLanguage();
+  const { locale, dict } = useLanguage();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
 
   // Record payment modal
@@ -45,20 +55,29 @@ export default function PaymentsPage() {
   const [editStatus, setEditStatus] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
 
-  const fetchData = () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    Promise.all([
-      fetch('/api/payments').then(r => r.json()),
-      fetch('/api/tenants').then(r => r.json()),
-    ]).then(([p, t]) => {
-      setPayments(p);
-      setTenants(t);
+    setLoadError("");
+    try {
+      const [paymentResponse, tenantResponse] = await Promise.all([
+        fetch('/api/payments'),
+        fetch('/api/tenants'),
+      ]);
+      if (!paymentResponse.ok || !tenantResponse.ok) throw new Error("Payment data request failed");
+      const [paymentData, tenantData] = await Promise.all([paymentResponse.json(), tenantResponse.json()]);
+      if (!Array.isArray(paymentData) || !Array.isArray(tenantData)) throw new Error("Invalid payment data response");
+      setPayments(paymentData);
+      setTenants(tenantData);
+    } catch {
+      setLoadError(dict.payments.loadError);
+    } finally {
       setLoading(false);
-    });
-  };
+    }
+  }, [dict.payments.loadError]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { void fetchData(); }, [fetchData]);
 
   const handleRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,14 +89,13 @@ export default function PaymentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(recordForm),
       });
-      const data = await res.json();
-      if (!res.ok) { setRecordError(data.error || 'Failed to record payment'); return; }
+      if (!res.ok) { setRecordError(dict.payments.recordError); return; }
       setShowRecord(false);
       setRecordForm({ tenantId: "", amount: "", status: "PAID", month: new Date().toISOString().slice(0, 7) });
       setRecordMonth(new Date());
-      fetchData();
+      void fetchData();
     } catch {
-      setRecordError("An unexpected error occurred");
+      setRecordError(dict.payments.unexpectedError);
     } finally {
       setRecordLoading(false);
     }
@@ -93,13 +111,18 @@ export default function PaymentsPage() {
     e.preventDefault();
     if (!editPayment) return;
     setEditLoading(true);
+    setEditError("");
     try {
       const res = await fetch(`/api/payments/${editPayment.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: editStatus, amount: editAmount }),
       });
-      if (res.ok) { setEditPayment(null); fetchData(); }
+      if (!res.ok) throw new Error("Payment update failed");
+      setEditPayment(null);
+      void fetchData();
+    } catch {
+      setEditError(dict.payments.editError);
     } finally {
       setEditLoading(false);
     }
@@ -109,9 +132,23 @@ export default function PaymentsPage() {
     p.tenant?.fullName.toLowerCase().includes(search.toLowerCase()) ||
     p.tenant?.property?.name.toLowerCase().includes(search.toLowerCase())
   );
+  const hasSearchResults = search.trim().length > 0;
+
+  const statusLabels = {
+    PAID: dict.payments.paid,
+    PENDING: dict.payments.pending,
+    OVERDUE: dict.payments.overdue,
+  };
 
   const generateWhatsAppLink = (p: Payment) => {
-    const text = `Bonjour ${p.tenant?.fullName}, votre paiement de loyer de ${formatXof(p.amount, locale)} pour le mois de ${p.month} a bien été reçu pour l'unité ${p.tenant?.unitNumber} (${p.tenant?.property?.name}). Merci!`;
+    const month = formatPaymentMonth(p.month, locale);
+    const text = formatMessage(dict.payments.whatsappReceipt, {
+      tenant: p.tenant.fullName,
+      amount: formatXof(p.amount, locale),
+      month,
+      unit: p.tenant.unitNumber,
+      property: p.tenant.property.name,
+    });
     return `https://wa.me/?text=${encodeURIComponent(text)}`;
   };
 
@@ -119,17 +156,19 @@ export default function PaymentsPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white p-8 rounded-3xl shadow-sm border border-slate-100 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Payments</h1>
-          <p className="text-slate-500 mt-2 text-lg">Track rent payments and history.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{dict.payments.title}</h1>
+          <p className="text-slate-500 mt-2 text-lg">{dict.payments.subtitle}</p>
         </div>
         {!isDemo && <button
           onClick={() => setShowRecord(true)}
           className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-violet-200 flex items-center transition-all"
         >
           <Plus size={20} className="mr-2" />
-          Record Payment
+          {dict.payments.record}
         </button>}
       </div>
+
+      {loadError && <div role="alert" className="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800"><span>{loadError}</span><button onClick={() => void fetchData()} className="font-semibold underline">{dict.common.retry}</button></div>}
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex justify-between gap-4 items-center bg-slate-50/50">
@@ -139,7 +178,7 @@ export default function PaymentsPage() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by tenant or property..."
+              placeholder={dict.payments.searchPlaceholder}
               className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow text-slate-900 shadow-sm"
             />
           </div>
@@ -154,13 +193,13 @@ export default function PaymentsPage() {
             <div className="bg-violet-50 p-5 rounded-2xl mb-5 text-violet-400 ring-1 ring-violet-100/50 shadow-sm">
               <CreditCard size={40} />
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">No payments recorded</h3>
-            <p className="text-slate-500 max-w-sm mb-8 text-lg">You haven&apos;t logged any rent payments yet.</p>
-            {!isDemo && <button
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">{hasSearchResults ? dict.payments.searchNoResults : dict.payments.noResults}</h3>
+            <p className="text-slate-500 max-w-sm mb-8 text-lg">{hasSearchResults ? dict.payments.searchEmptyDescription : dict.payments.emptyDescription}</p>
+            {!isDemo && payments.length === 0 && <button
               onClick={() => setShowRecord(true)}
               className="bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800 px-6 py-3 rounded-xl font-semibold transition-colors"
             >
-              Record First Payment
+              {dict.payments.recordFirst}
             </button>}
           </div>
         ) : (
@@ -168,30 +207,30 @@ export default function PaymentsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/80 text-slate-500 text-sm border-b border-slate-100">
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Date & Month</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Tenant / Property</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Amount</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Status</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
+                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">{dict.payments.dateAndMonth}</th>
+                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">{dict.payments.tenantAndProperty}</th>
+                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">{dict.payments.amount}</th>
+                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">{dict.payments.status}</th>
+                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right">{dict.payments.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((payment) => (
                   <tr key={payment.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-5">
-                      <div className="font-bold text-slate-900 text-base">{new Date(payment.date).toLocaleDateString()}</div>
-                      <div className="text-slate-500 font-medium text-sm">For: {payment.month}</div>
-                      {payment.receiptNumber && <div className="text-xs font-semibold text-emerald-700">Sample receipt · Reçu fictif {payment.receiptNumber}</div>}
+                      <div className="font-bold text-slate-900 text-base">{new Date(payment.date).toLocaleDateString(locale === "fr" ? "fr-FR" : "en-US")}</div>
+                      <div className="text-slate-500 font-medium text-sm">{formatMessage(dict.payments.forMonth, { month: formatPaymentMonth(payment.month, locale) })}</div>
+                      {payment.receiptNumber && <div className="text-xs font-semibold text-emerald-700">{dict.payments.sampleReceipt} {payment.receiptNumber}</div>}
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-slate-900 font-bold text-base">{payment.tenant?.fullName}</div>
-                      <div className="text-slate-500 text-sm">{payment.tenant?.property?.name} (Unit {payment.tenant?.unitNumber})</div>
+                      <div className="text-slate-500 text-sm">{payment.tenant?.property?.name} ({formatMessage(dict.payments.unit, { unit: payment.tenant?.unitNumber || "" })})</div>
                     </td>
                     <td className="px-8 py-5 text-base font-bold text-indigo-600">
                       {formatXof(payment.amount, locale)}
                     </td>
                     <td className="px-8 py-5">
-                      {getStatusBadge(payment.status)}
+                      {getStatusBadge(payment.status, dict.payments)}
                     </td>
                     <td className="px-8 py-5 text-right space-x-3">
                       {payment.status === "PAID" && (
@@ -200,17 +239,17 @@ export default function PaymentsPage() {
                           target="_blank"
                           rel="noreferrer"
                           className="text-emerald-600 hover:text-emerald-800 text-sm font-bold transition-colors inline-flex items-center"
-                          title="Send WhatsApp Receipt"
+                          title={dict.payments.sendReceipt}
                         >
                           <MessageCircle size={18} className="mr-1" />
-                          Receipt
+                          {dict.payments.receipt}
                         </a>
                       )}
                       {!isDemo && <button
                         onClick={() => openEdit(payment)}
                         className="text-violet-600 hover:text-violet-800 text-sm font-bold transition-colors"
                       >
-                        Edit
+                        {dict.payments.editTitle}
                       </button>}
                     </td>
                   </tr>
@@ -226,8 +265,8 @@ export default function PaymentsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">Record Payment</h2>
-              <button onClick={() => setShowRecord(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <h2 className="text-xl font-bold text-slate-900">{dict.payments.recordTitle}</h2>
+              <button onClick={() => setShowRecord(false)} aria-label={dict.common.close} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -236,21 +275,21 @@ export default function PaymentsPage() {
                 <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">{recordError}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tenant</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.tenant}</label>
                 <select
                   value={recordForm.tenantId}
                   onChange={e => setRecordForm(f => ({ ...f, tenantId: e.target.value }))}
                   required
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
                 >
-                  <option value="">Select a tenant...</option>
+                  <option value="">{dict.payments.selectTenant}</option>
                   {tenants.map(t => (
                     <option key={t.id} value={t.id}>{t.fullName} — {t.property?.name} (Unit {t.unitNumber})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (FCFA)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.amountFcfa}</label>
                 <input
                   type="number"
                   value={recordForm.amount}
@@ -259,21 +298,21 @@ export default function PaymentsPage() {
                   min={1}
                   step={1}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
-                  placeholder="e.g. 75000"
+                  placeholder={dict.payments.amountPlaceholder}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.status}</label>
                 <select
                   value={recordForm.status}
                   onChange={e => setRecordForm(f => ({ ...f, status: e.target.value }))}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
                 >
-                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {STATUSES.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Month</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.month}</label>
                 <DatePicker
                   selected={recordMonth}
                   onChange={(date) => {
@@ -285,16 +324,16 @@ export default function PaymentsPage() {
                     }
                   }}
                   showMonthYearPicker
-                  placeholderText="Select month"
+                  placeholderText={dict.payments.selectMonth}
                   required
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowRecord(false)} className="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                  Cancel
+                  {dict.common.cancel}
                 </button>
                 <button type="submit" disabled={recordLoading} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-70 flex justify-center items-center">
-                  {recordLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Save Payment"}
+                  {recordLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : dict.payments.savePayment}
                 </button>
               </div>
             </form>
@@ -307,14 +346,15 @@ export default function PaymentsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-900">Edit Payment</h2>
-              <button onClick={() => setEditPayment(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <h2 className="text-xl font-bold text-slate-900">{dict.payments.editTitle}</h2>
+              <button onClick={() => setEditPayment(null)} aria-label={dict.common.close} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X size={24} />
               </button>
             </div>
             <form onSubmit={handleEdit} className="p-6 space-y-4">
+              {editError && <div role="alert" className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">{editError}</div>}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (FCFA)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.amountFcfa}</label>
                 <input
                   type="number"
                   value={editAmount}
@@ -326,21 +366,21 @@ export default function PaymentsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{dict.payments.status}</label>
                 <select
                   value={editStatus}
                   onChange={e => setEditStatus(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none text-slate-900"
                 >
-                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {STATUSES.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditPayment(null)} className="flex-1 px-4 py-3 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
-                  Cancel
+                  {dict.common.cancel}
                 </button>
                 <button type="submit" disabled={editLoading} className="flex-1 bg-violet-600 hover:bg-violet-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-70 flex justify-center items-center">
-                  {editLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : "Save Changes"}
+                  {editLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : dict.payments.saveChanges}
                 </button>
               </div>
             </form>
