@@ -20,4 +20,5 @@ jobs:
       - run: npm ci
       - name: Build in production demo mode without a database
         run: VERCEL_ENV=production DEMO_MODE=true npm run vercel-build
+      - run: npm test
       - run: npm run smoke:demo
