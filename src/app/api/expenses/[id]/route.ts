@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { demoReadOnlyResponse, isDemoSession } from '@/lib/demo';
+import { parseXofAmount } from '@/lib/money';
 
 export async function PUT(
   request: Request,
@@ -23,9 +24,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
+    const parsedAmount = parseXofAmount(amount);
+    if (parsedAmount === null) {
+      return NextResponse.json({ error: 'Amount must be a positive whole XOF amount' }, { status: 400 });
     }
 
     const existing = await prisma.expense.findUnique({

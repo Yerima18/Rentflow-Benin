@@ -223,19 +223,37 @@ Do not run this baseline command on a new or schema-mismatched database. New
 databases should use `npm run db:migrate:deploy` to create their schema from the
 versioned migrations.
 
+The XOF migration converts rent, payment, and expense values to whole FCFA
+amounts by rounding any legacy fractional values to the nearest franc. Back up
+an existing database before deployment; values outside PostgreSQL `INTEGER`
+range stop the migration for manual review instead of being truncated.
+
 Do not run `npm run db:seed` against a production landlord database. The seed
 requires demo credentials in environment variables, uses clearly fictional
 names and addresses with non-dialable contact placeholders, and refuses
 production by default. Remote/production opt-ins are only for a separate demo
 database.
 
-## Smoke checks
+## Tests and smoke checks
+
+Run the API and XOF unit tests after a clean dependency install:
+
+```bash
+npm ci
+npm test
+```
+
+`npm test` covers landlord registration/login, unauthenticated API requests,
+cross-landlord tenant isolation, payment create/edit, and invalid whole-FCFA
+amounts using mocked authentication and Prisma calls; it does not connect to a
+database or use tenant records. The unit tests also cover accepted/rejected
+XOF values and formatting.
 
 `npm run smoke:demo` starts a production server without a database and checks
-the homepage, public sample login, dashboard, one property detail page, sample
-records, and rejected property/tenant/payment/expense/profile writes. CI runs
-the production build and these smoke checks on pull requests and pushes to
-`main`.
+guest-only access, the read-only sample labels and hidden write controls across
+dashboard lists/forms, sample records, and rejected property/tenant/payment/
+expense/profile writes. CI runs the production build, `npm test`, and these
+demo smoke checks on pull requests and pushes to `main`.
 
 The public demo uses bundled fixtures, not a live or seeded database. A
 database-backed deployment, its credentials, migration baseline, and the live

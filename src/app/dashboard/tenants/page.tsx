@@ -4,12 +4,15 @@ import { useState, useEffect } from "react";
 import { Users, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useIsDemoUser } from "@/components/DemoMode";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { formatXof } from "@/lib/money";
 
 type Tenant = { id: string; fullName: string; phone: string; unitNumber: string; rentAmount: number; dueDate: number; propertyId: string; property: { name: string } };
 type Property = { id: string; name: string };
 
 export default function TenantsPage() {
   const isDemo = useIsDemoUser();
+  const { locale } = useLanguage();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +120,7 @@ export default function TenantsPage() {
                       <div className="text-slate-500 font-medium">Unit: {tenant.unitNumber}</div>
                     </td>
                     <td className="px-8 py-5">
-                      <div className="text-indigo-600 font-bold text-base">{tenant.rentAmount.toLocaleString()}</div>
+                      <div className="text-indigo-600 font-bold text-base">{formatXof(tenant.rentAmount, locale)}</div>
                       <div className="text-slate-500 text-xs font-medium uppercase tracking-wide mt-1">Due: Day {tenant.dueDate}</div>
                     </td>
                     <td className="px-8 py-5 text-right space-x-4">

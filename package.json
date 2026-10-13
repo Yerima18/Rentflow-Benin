@@ -10,6 +10,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "smoke:demo": "node scripts/smoke-demo.mjs",
+    "test": "tsx --test src/lib/money.test.ts && vitest run",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"
@@ -42,6 +43,7 @@
     "prisma": "^7.5.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
