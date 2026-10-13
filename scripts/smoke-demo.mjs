@@ -105,6 +105,32 @@ try {
   const session = await sessionResponse.json();
   assert.equal(session.user?.isDemo, true, "session should be marked as the isolated demo account");
 
+  const credentialsJar = new Map();
+  const credentialsCsrfResponse = await fetch(`${baseUrl}/api/auth/csrf`);
+  updateCookies(credentialsJar, credentialsCsrfResponse);
+  const { csrfToken: credentialsCsrfToken } = await credentialsCsrfResponse.json();
+  const credentialsSignInResponse = await fetch(`${baseUrl}/api/auth/callback/credentials`, {
+    method: "POST",
+    redirect: "manual",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      cookie: cookieHeader(credentialsJar),
+    },
+    body: new URLSearchParams({
+      csrfToken: credentialsCsrfToken,
+      callbackUrl: `${baseUrl}/dashboard`,
+      json: "true",
+      email: "landlord@example.test",
+      password: "not-a-real-password",
+    }),
+  });
+  updateCookies(credentialsJar, credentialsSignInResponse);
+  const credentialsSessionResponse = await fetch(`${baseUrl}/api/auth/session`, {
+    headers: { cookie: cookieHeader(credentialsJar) },
+  });
+  const credentialsSession = await credentialsSessionResponse.json();
+  assert.ok(!credentialsSession.user, "normal landlord credentials must not create a session in demo mode");
+
   const dashboard = await fetch(`${baseUrl}/dashboard`, { headers: authenticatedHeaders });
   const dashboardHtml = await dashboard.text();
   assert.equal(dashboard.status, 200, "demo account should open the dashboard");
@@ -114,7 +140,39 @@ try {
   }
 
   const propertyList = await fetch(`${baseUrl}/dashboard/properties`, { headers: authenticatedHeaders });
+  const propertyListHtml = await propertyList.text();
   assert.equal(propertyList.status, 200, "demo account should open the property list");
+  assert.ok(propertyListHtml.includes("Read-only demo"), "property list should label demo data as read-only");
+  assert.ok(!propertyListHtml.includes("Add Property"), "demo property list should hide property creation");
+  assert.ok(!propertyListHtml.includes(">Delete<"), "demo property list should hide property deletion");
+
+  const dashboardPages = [
+    ["tenants", "/dashboard/tenants", ["Add Tenant", ">Delete<"]],
+    ["payments", "/dashboard/payments", ["Record Payment", ">Edit<"]],
+    ["expenses", "/dashboard/expenses", ["Add Expense", "title=\"delete\""]],
+  ];
+  for (const [name, path, writeControls] of dashboardPages) {
+    const response = await fetch(`${baseUrl}${path}`, { headers: authenticatedHeaders });
+    const html = await response.text();
+    assert.equal(response.status, 200, `demo account should open the ${name} page`);
+    assert.ok(html.includes("Read-only demo"), `${name} page should label demo data as read-only`);
+    for (const writeControl of writeControls) {
+      assert.ok(!html.includes(writeControl), `demo ${name} page should hide ${writeControl}`);
+    }
+  }
+
+  const createPages = [
+    ["property", "/dashboard/properties/new", "Add New Property"],
+    ["tenant", "/dashboard/tenants/new", "Register New Tenant"],
+    ["expense", "/dashboard/expenses/new", "Add New Expense"],
+  ];
+  for (const [name, path, formTitle] of createPages) {
+    const response = await fetch(`${baseUrl}${path}`, { headers: authenticatedHeaders });
+    const html = await response.text();
+    assert.equal(response.status, 200, `demo account should open the ${name} read-only notice`);
+    assert.ok(html.includes("Read-only demo"), `${name} creation route should explain demo changes are disabled`);
+    assert.ok(!html.includes(formTitle), `${name} creation form should not render in demo mode`);
+  }
 
   const propertiesResponse = await fetch(`${baseUrl}/api/properties`, { headers: authenticatedHeaders });
   const properties = await propertiesResponse.json();
@@ -164,7 +222,7 @@ try {
   });
   assert.equal(registrationResponse.status, 403, "registration should be blocked in isolated demo mode");
 
-  console.log("Demo smoke checks passed: homepage, login, dashboard, property details, sample records, and blocked writes.");
+  console.log("Demo smoke checks passed: guest-only login, read-only dashboard pages and forms, sample records, and blocked writes.");
 } catch (error) {
   console.error(error);
   console.error(serverOutput);
