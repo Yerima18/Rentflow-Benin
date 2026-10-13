@@ -24,7 +24,7 @@ export default function Navbar() {
             <User size={18} />
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-sm font-semibold text-gray-800">{session?.user?.name || 'Administrator'}</span>
+            <span className="text-sm font-semibold text-gray-800">{session?.user?.name || dict.common.administrator}</span>
             <span className="text-xs text-gray-500">{session?.user?.email}</span>
           </div>
         </div>

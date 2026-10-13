@@ -7,9 +7,10 @@ import Link from "next/link";
 import { useIsDemoUser } from "@/components/DemoMode";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatXof } from "@/lib/money";
+import { formatMessage } from "@/lib/i18n/formatMessage";
 
 export default function DashboardPage() {
-  const { locale } = useLanguage();
+  const { locale, dict } = useLanguage();
   const { data: session } = useSession();
   const isDemo = useIsDemoUser();
   const [stats, setStats] = useState({
@@ -20,6 +21,7 @@ export default function DashboardPage() {
     expensesThisMonth: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -30,6 +32,10 @@ export default function DashboardPage() {
           fetch('/api/payments'),
           fetch('/api/expenses')
         ]);
+
+        if (![propsRes, tenantsRes, paymentsRes, expensesRes].every((response) => response.ok)) {
+          throw new Error("Dashboard summary request failed");
+        }
         
         const properties = await propsRes.json();
         const tenants = await tenantsRes.json();
@@ -56,6 +62,7 @@ export default function DashboardPage() {
         });
       } catch (error) {
         console.error('Failed to fetch stats', error);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -73,26 +80,28 @@ export default function DashboardPage() {
   }
 
   const statCards = [
-    { name: "Total Properties", value: stats.properties, icon: Building, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
-    { name: "Total Tenants", value: stats.tenants, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
-    { name: "Expected Revenue", value: formatXof(stats.monthlyRevenue, locale), icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
-    { name: "Collected This Month", value: formatXof(stats.collectedThisMonth, locale), icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+    { name: dict.dashboard.totalProperties, value: stats.properties, icon: Building, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+    { name: dict.dashboard.totalTenants, value: stats.tenants, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+    { name: dict.dashboard.expectedRevenue, value: formatXof(stats.monthlyRevenue, locale), icon: TrendingUp, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
+    { name: dict.dashboard.collectedThisMonth, value: formatXof(stats.collectedThisMonth, locale), icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
   ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Bonjour, {session?.user?.name || 'Landlord'}! 👋</h1>
-          <p className="text-slate-500 mt-2 text-lg">Here is a summary of your properties and rentals today.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{formatMessage(dict.dashboard.greeting, { name: session?.user?.name || dict.common.landlord })} 👋</h1>
+          <p className="text-slate-500 mt-2 text-lg">{dict.dashboard.subtitle}</p>
         </div>
         {!isDemo && <div className="mt-4 md:mt-0 flex space-x-3">
           <Link href="/dashboard/properties/new" className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-indigo-200 transition-all flex items-center space-x-2">
             <PlusCircle size={20} />
-            <span>New Property</span>
+            <span>{dict.dashboard.addNewProperty}</span>
           </Link>
         </div>}
       </div>
+
+      {loadError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">{dict.dashboard.loadError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {statCards.map((card, idx) => {
@@ -117,17 +126,17 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-             <h2 className="text-xl font-bold text-slate-900 flex items-center"><TrendingUp className="mr-2 text-indigo-500" /> Revenue Overview</h2>
-             <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">This Month</span>
+             <h2 className="text-xl font-bold text-slate-900 flex items-center"><TrendingUp className="mr-2 text-indigo-500" /> {dict.dashboard.revenueOverview}</h2>
+             <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">{dict.dashboard.thisMonth}</span>
           </div>
           <div className="p-8">
             <div className="flex justify-between items-end mb-2">
               <div>
-                <p className="text-sm font-medium text-slate-500">Collected Revenue</p>
+                <p className="text-sm font-medium text-slate-500">{dict.dashboard.collectedRevenue}</p>
                 <p className="text-2xl font-bold text-slate-900">{formatXof(stats.collectedThisMonth, locale)}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium text-slate-500">Total Expenses</p>
+                <p className="text-sm font-medium text-slate-500">{dict.dashboard.totalExpenses}</p>
                 <p className="text-2xl font-bold text-rose-600">{formatXof(stats.expensesThisMonth, locale)}</p>
               </div>
             </div>
@@ -145,7 +154,7 @@ export default function DashboardPage() {
             </div>
             
             <div className="mt-8 flex justify-between items-center pt-6 border-t border-slate-100">
-              <span className="font-semibold text-slate-700">Net Profit</span>
+              <span className="font-semibold text-slate-700">{dict.dashboard.netProfit}</span>
               <span className={`text-xl font-black ${stats.collectedThisMonth >= stats.expensesThisMonth ? 'text-emerald-600' : 'text-rose-600'}`}>
                 {formatXof(stats.collectedThisMonth - stats.expensesThisMonth, locale)}
               </span>
@@ -155,14 +164,13 @@ export default function DashboardPage() {
 
         {isDemo ? (
           <div className="bg-white rounded-3xl shadow-sm border border-amber-100 p-8">
-            <h2 className="text-xl font-bold text-slate-900">Explore the sample portfolio · Explorez le portefeuille fictif</h2>
-            <p className="mt-3 text-slate-600">This public account is read-only. Browse the properties, tenants, and payment examples; changes are disabled.</p>
-            <p className="mt-2 text-slate-600">Ce compte public est en lecture seule. Consultez les biens, locataires et paiements fictifs; les modifications sont désactivées.</p>
+            <h2 className="text-xl font-bold text-slate-900">{dict.demo.samplePortfolioTitle}</h2>
+            <p className="mt-3 text-slate-600">{dict.demo.samplePortfolioBody}</p>
           </div>
         ) : (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
             <div className="px-8 py-6 border-b border-slate-50 bg-slate-50/50">
-              <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
+              <h2 className="text-xl font-bold text-slate-900">{dict.dashboard.quickActions}</h2>
             </div>
             <div className="p-6 space-y-4 flex-1">
               <Link href="/dashboard/properties/new" className="w-full text-left p-5 rounded-2xl border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm transition-all group flex justify-between items-center bg-white">
@@ -170,7 +178,7 @@ export default function DashboardPage() {
                   <div className="bg-indigo-100 p-3 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <Building size={20} />
                   </div>
-                  <span className="font-bold text-slate-700 group-hover:text-indigo-900 text-lg">Add New Property</span>
+                  <span className="font-bold text-slate-700 group-hover:text-indigo-900 text-lg">{dict.dashboard.addNewProperty}</span>
                 </div>
                 <ArrowRight className="text-slate-300 group-hover:text-indigo-600 transition-colors" size={20} />
               </Link>
@@ -180,7 +188,7 @@ export default function DashboardPage() {
                   <div className="bg-emerald-100 p-3 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <Users size={20} />
                   </div>
-                  <span className="font-bold text-slate-700 group-hover:text-emerald-900 text-lg">Register Tenant</span>
+                  <span className="font-bold text-slate-700 group-hover:text-emerald-900 text-lg">{dict.dashboard.registerTenant}</span>
                 </div>
                 <ArrowRight className="text-slate-300 group-hover:text-emerald-600 transition-colors" size={20} />
               </Link>
@@ -190,7 +198,7 @@ export default function DashboardPage() {
                   <div className="bg-violet-100 p-3 rounded-xl text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-colors">
                     <CreditCard size={20} />
                   </div>
-                  <span className="font-bold text-slate-700 group-hover:text-violet-900 text-lg">Record Payment</span>
+                  <span className="font-bold text-slate-700 group-hover:text-violet-900 text-lg">{dict.dashboard.recordPayment}</span>
                 </div>
                 <ArrowRight className="text-slate-300 group-hover:text-violet-600 transition-colors" size={20} />
               </Link>

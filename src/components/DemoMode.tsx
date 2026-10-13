@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 export function useIsDemoUser() {
   const { data: session } = useSession();
@@ -8,11 +9,12 @@ export function useIsDemoUser() {
 }
 
 export function DemoReadOnlyPanel() {
+  const { dict } = useLanguage();
+
   return (
     <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-950" role="status">
-      <h1 className="text-xl font-bold">Démo en lecture seule · Read-only demo</h1>
-      <p className="mt-2">Les données sont fictives. Les modifications sont désactivées.</p>
-      <p className="mt-1">All records are fictional. Changes are disabled in this public demo.</p>
+      <h1 className="text-xl font-bold">{dict.demo.panelTitle}</h1>
+      <p className="mt-2">{dict.demo.panelBody}</p>
     </div>
   );
 }
