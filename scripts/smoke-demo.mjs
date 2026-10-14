@@ -62,7 +62,26 @@ try {
   await fetchReady();
 
   const home = await fetch(`${baseUrl}/`);
+  const homeHtml = await home.text();
   assert.equal(home.status, 200, "homepage should render without a database");
+  assert.ok(homeHtml.includes('<html lang="fr">'), "French should be the default landing-page locale");
+  for (const frenchCopy of ["RentFlow Bénin | Gestion locative", "Gérez vos biens locatifs, locataires, paiements en FCFA", "Découvrir la démo publique", "Accès bêta", "Enregistrer les loyers en FCFA", "Envoyer les reçus de loyer par WhatsApp", "Conçu pour les propriétaires au Bénin"]) {
+    assert.ok(homeHtml.includes(frenchCopy), `French landing page should include ${frenchCopy}`);
+  }
+  for (const englishCopy of ["RentFlow Benin | Rental management", "Organize rental properties, tenants, FCFA payments", "Explore the public demo", "Beta access", "Record rent payments in FCFA", "Send rent receipts by WhatsApp", "Built for landlords in Benin"]) {
+    assert.ok(!homeHtml.includes(englishCopy), `French landing page should not mix in ${englishCopy}`);
+  }
+
+  const englishHome = await fetch(`${baseUrl}/`, { headers: { cookie: "NEXT_LOCALE=en" } });
+  const englishHomeHtml = await englishHome.text();
+  assert.equal(englishHome.status, 200, "English landing page should render");
+  assert.ok(englishHomeHtml.includes('<html lang="en">'), "English landing page should honor the selected locale");
+  for (const englishCopy of ["RentFlow Benin | Rental management", "Organize rental properties, tenants, FCFA payments", "Explore the public demo", "Beta access", "Record rent payments in FCFA", "Send rent receipts by WhatsApp", "Built for landlords in Benin"]) {
+    assert.ok(englishHomeHtml.includes(englishCopy), `English landing page should include ${englishCopy}`);
+  }
+  for (const frenchCopy of ["RentFlow Bénin | Gestion locative", "Gérez vos biens locatifs, locataires, paiements en FCFA", "Découvrir la démo publique", "Accès bêta", "Enregistrer les loyers en FCFA", "Envoyer les reçus de loyer par WhatsApp", "Conçu pour les propriétaires au Bénin"]) {
+    assert.ok(!englishHomeHtml.includes(frenchCopy), `English landing page should not mix in ${frenchCopy}`);
+  }
 
   const loginPage = await fetch(`${baseUrl}/login`);
   const loginHtml = await loginPage.text();

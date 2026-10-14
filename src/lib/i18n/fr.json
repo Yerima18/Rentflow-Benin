@@ -24,6 +24,8 @@
     "close": "Fermer"
   },
   "landing": {
+    "metaTitle": "RentFlow Bénin | Gestion locative",
+    "metaDescription": "Gérez vos biens locatifs, locataires, paiements en FCFA et reçus WhatsApp au même endroit.",
     "badge": "Conçu pour les propriétaires au Bénin",
     "title1": "Gérez vos locations",
     "title2": "en toute sérénité",
@@ -35,7 +37,18 @@
     "feature2Title": "Suivre les Locataires",
     "feature2Desc": "Gardez les coordonnées, l'affectation et les loyers de vos locataires dans un espace organisé.",
     "feature3Title": "Suivre les Paiements",
-    "feature3Desc": "Enregistrez les paiements, signalez les retards et visualisez vos revenus mensuels en FCFA."
+    "feature3Desc": "Enregistrez les paiements, signalez les retards et visualisez vos revenus mensuels en FCFA.",
+    "exploreDemo": "Découvrir la démo publique",
+    "pricingTitle": "Accès bêta",
+    "pricingSubtitle": "Découvrez gratuitement les fonctions actuelles de gestion des biens, des locataires et des paiements de loyer.",
+    "pricingPlan": "Bêta",
+    "pricingPrice": "Gratuit",
+    "pricingDetails": "Accès sans frais pendant la bêta de RentFlow.",
+    "pricingFeature1": "Suivre les biens et les logements",
+    "pricingFeature2": "Gérer les locataires et les baux",
+    "pricingFeature3": "Enregistrer les loyers en FCFA",
+    "pricingFeature4": "Envoyer les reçus de loyer par WhatsApp",
+    "footer": "© {year} RentFlow. Conçu pour les propriétaires au Bénin."
   },
   "dashboard": {
     "greeting": "Bonjour, {name} !",

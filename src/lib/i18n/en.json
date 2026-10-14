@@ -24,6 +24,8 @@
     "close": "Close"
   },
   "landing": {
+    "metaTitle": "RentFlow Benin | Rental management",
+    "metaDescription": "Organize rental properties, tenants, FCFA payments, and WhatsApp receipts in one place.",
     "badge": "Built for Benin landlords",
     "title1": "Manage your rentals",
     "title2": "with confidence",
@@ -35,7 +37,18 @@
     "feature2Title": "Track Tenants",
     "feature2Desc": "Keep tenant contact details, unit assignments, and rent amounts in one organized place.",
     "feature3Title": "Monitor Payments",
-    "feature3Desc": "Record payments, flag overdue rent, and see your monthly revenue at a glance — in FCFA."
+    "feature3Desc": "Record payments, flag overdue rent, and see your monthly revenue at a glance — in FCFA.",
+    "exploreDemo": "Explore the public demo",
+    "pricingTitle": "Beta access",
+    "pricingSubtitle": "Explore the current property, tenant, and rent-payment workflows at no charge during the beta.",
+    "pricingPlan": "Beta",
+    "pricingPrice": "Free",
+    "pricingDetails": "Available at no charge while RentFlow is in beta.",
+    "pricingFeature1": "Track properties and units",
+    "pricingFeature2": "Manage tenant and lease details",
+    "pricingFeature3": "Record rent payments in FCFA",
+    "pricingFeature4": "Send rent receipts by WhatsApp",
+    "footer": "© {year} RentFlow. Built for landlords in Benin."
   },
   "dashboard": {
     "greeting": "Hello, {name}!",
