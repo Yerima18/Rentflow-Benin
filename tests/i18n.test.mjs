@@ -26,5 +26,16 @@ describe("English and French dictionaries", () => {
     expect(formatMessage(fr.dashboard.greeting, { name: "Amin" })).toBe("Bonjour, Amin !");
     expect(formatMessage(fr.tenants.unitLabel, { unit: "A1" })).toBe("Logement : A1");
     expect(formatMessage(fr.properties.unitAndTenantCount, { units: 12, tenants: 8 })).toBe("12 logements · 8 locataires");
+    expect(formatMessage(fr.landing.footer, { year: 2026 })).toBe("© 2026 RentFlow. Conçu pour les propriétaires au Bénin.");
+  });
+
+  it("provides localized beta details and supported rent-flow features", () => {
+    for (const dictionary of [en, fr]) {
+      expect(dictionary.landing.pricingFeature1).toBeTruthy();
+      expect(dictionary.landing.pricingFeature2).toBeTruthy();
+      expect(dictionary.landing.pricingFeature3).toContain("FCFA");
+      expect(dictionary.landing.pricingFeature4).toContain("WhatsApp");
+      expect(dictionary.landing.pricingDetails).toBeTruthy();
+    }
   });
 });

@@ -7,6 +7,18 @@ import { cookies } from "next/headers";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LanguageSwitcher } from "@/lib/i18n/LanguageSwitcher";
 import { isDemoMode } from "@/lib/demo";
+import { formatMessage } from "@/lib/i18n/formatMessage";
+
+export async function generateMetadata() {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "fr";
+  const dict = await getDictionary(locale);
+
+  return {
+    title: dict.landing.metaTitle,
+    description: dict.landing.metaDescription,
+  };
+}
 
 export default async function Home() {
   const demoMode = isDemoMode();
@@ -14,26 +26,26 @@ export default async function Home() {
   if (session) redirect("/dashboard");
 
   const cookieStore = await cookies();
-  const locale = (cookieStore.get("NEXT_LOCALE")?.value as "en" | "fr") || "fr";
+  const locale = cookieStore.get("NEXT_LOCALE")?.value === "en" ? "en" : "fr";
   const dict = await getDictionary(locale);
 
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+      <nav className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 max-w-6xl mx-auto sm:px-6">
         <div className="flex items-center space-x-2">
           <div className="bg-blue-600 p-2 rounded-lg text-white">
             <Building size={20} />
           </div>
           <span className="text-xl font-bold text-gray-900">RentFlow</span>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
           <LanguageSwitcher />
-          <Link href="/login" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+          <Link href="/login" className="whitespace-nowrap text-gray-600 hover:text-gray-900 font-medium transition-colors">
             {dict.common.login}
           </Link>
           {!demoMode && (
-            <Link href="/register" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition-colors">
+            <Link href="/register" className="whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition-colors">
               {dict.common.signUp}
             </Link>
           )}
@@ -45,7 +57,7 @@ export default async function Home() {
         <span className="inline-block bg-blue-50 text-blue-700 text-sm font-semibold px-4 py-1.5 rounded-full mb-6 border border-blue-100">
           {dict.landing.badge}
         </span>
-        <h1 className="text-5xl sm:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
           {dict.landing.title1}<br />
           <span className="text-blue-600">{dict.landing.title2}</span>
         </h1>
@@ -55,7 +67,7 @@ export default async function Home() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {demoMode ? (
             <Link href="/login" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all">
-              Explore the public demo
+              {dict.landing.exploreDemo}
             </Link>
           ) : (
             <Link href="/register" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all">
@@ -101,22 +113,22 @@ export default async function Home() {
       {/* Pricing */}
       <section className="py-20 px-6">
         <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Simple pricing</h2>
-          <p className="text-gray-500 mb-10">No credit card required. Free while in beta.</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">{dict.landing.pricingTitle}</h2>
+          <p className="text-gray-500 mb-10">{dict.landing.pricingSubtitle}</p>
           <div className="bg-white border-2 border-blue-600 rounded-2xl p-10 shadow-xl">
-            <span className="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-wider">Starter</span>
-            <div className="text-5xl font-extrabold text-gray-900 mb-2">Free</div>
-            <p className="text-gray-500 mb-8">During beta — all features included</p>
+            <span className="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-wider">{dict.landing.pricingPlan}</span>
+            <div className="text-5xl font-extrabold text-gray-900 mb-2">{dict.landing.pricingPrice}</div>
+            <p className="text-gray-500 mb-8">{dict.landing.pricingDetails}</p>
             <ul className="text-left space-y-3 mb-10 text-gray-700">
-              {["Unlimited properties", "Unlimited tenants", "Payment tracking", "Multi-user (coming soon)"].map((f) => (
-                <li key={f} className="flex items-center space-x-3">
+              {[dict.landing.pricingFeature1, dict.landing.pricingFeature2, dict.landing.pricingFeature3, dict.landing.pricingFeature4].map((feature) => (
+                <li key={feature} className="flex items-center space-x-3">
                   <span className="text-blue-600 font-bold">✓</span>
-                  <span>{f}</span>
+                  <span>{feature}</span>
                 </li>
               ))}
             </ul>
             <Link href={demoMode ? "/login" : "/register"} className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors">
-              {demoMode ? "Explore the demo" : "Get Started"}
+              {demoMode ? dict.landing.exploreDemo : dict.landing.getStarted}
             </Link>
           </div>
         </div>
@@ -124,7 +136,7 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8 text-center text-gray-400 text-sm">
-        © {new Date().getFullYear()} RentFlow. Built for landlords in Benin.
+        {formatMessage(dict.landing.footer, { year: new Date().getFullYear() })}
       </footer>
     </div>
   );
