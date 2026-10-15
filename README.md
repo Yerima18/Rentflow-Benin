@@ -1,5 +1,7 @@
 # RentFlow Benin
 
+[English](README.md) · [Français](README.fr.md)
+
 A property management web application for landlords in Benin. Manage properties, tenants, rent payments, and expenses from a single dashboard — with bilingual support (French / English).
 
 ## Features
@@ -13,6 +15,14 @@ A property management web application for landlords in Benin. Manage properties,
 - **Bilingual** — Full French and English interface (FR/EN switcher)
 - **Public demo** — Passwordless guest access to fictional Cotonou properties, tenants, rent payments, receipts, and expenses in a read-only sample account
 
+## Screenshots
+
+The screenshots show the same public landing page in both supported languages.
+
+| Français | English |
+|---|---|
+| ![Page d’accueil RentFlow en français](public/screenshots/landing-fr.png) | ![RentFlow English landing page](public/screenshots/landing-en.png) |
+
 ## Public demo
 
 Open the live demo at [rentflow-benin.vercel.app](https://rentflow-benin.vercel.app/)
@@ -21,10 +31,23 @@ page. No shared email or password is needed. All names and records are
 fictional; demo mutations and registration are blocked at the API and hidden
 or replaced in the interface.
 
-For a Vercel deployment that already has a `DATABASE_URL`, set
-`DEMO_MODE=true` in the Production environment and redeploy before sharing the
-demo. This PR does not change Vercel settings or verify the live URL; confirm
-the homepage, sample login, dashboard, and property detail page after deploy.
+For the current bundled-fixture demo on Vercel, set these variables in the
+**Production** environment and redeploy:
+
+| Variable | Production value |
+|---|---|
+| `DEMO_MODE` | `true` |
+| `NEXTAUTH_URL` | `https://rentflow-benin.vercel.app` |
+| `NEXTAUTH_SECRET` | A newly generated secret (for example, `openssl rand -base64 32`) |
+
+Leave `DATABASE_URL`, `DEMO_SEED_EMAIL`, and `DEMO_SEED_PASSWORD` unset for this
+demo. It uses bundled fictional fixtures and does not connect to or seed a
+database. Setting `DATABASE_URL` does not turn these fixtures into a seeded
+database demo. `vercel.json` already selects the production build command; no
+custom Vercel build command is needed. The repo changes do not set Vercel
+variables or verify the live deployment: the maintainer must save these
+Production variables, redeploy, then verify the homepage, guest login,
+dashboard, and property detail page before sharing the URL.
 
 When `DEMO_MODE=true` (or when `DATABASE_URL` is absent), the app serves bundled
 fictional fixtures without connecting to PostgreSQL. The demo covers 12
@@ -187,15 +210,14 @@ database-backed landlord app.
 
 ### Vercel read-only demo
 
-Set `DEMO_MODE=true` in the Vercel **Production** environment, then redeploy.
-This selects only fictional in-app fixtures, blocks mutations and registration,
-and skips production migrations; `DATABASE_URL` is not required for the demo.
-The same mode is selected automatically if no database URL is present. The
-login page offers public guest access without a shared password. Do not add
-tenant records to a demo deployment.
+Set the Production variables listed in [Public demo](#public-demo), then
+redeploy. This selects only fictional in-app fixtures, blocks mutations and
+registration, and skips production migrations. The login page offers public
+guest access without a shared password. Do not add tenant records to a demo
+deployment.
 
-Set `NEXTAUTH_SECRET` to a generated value and `NEXTAUTH_URL` to the canonical
-site URL when available. Isolated demo mode has a public, read-only fallback
+Use the generated `NEXTAUTH_SECRET` and canonical `NEXTAUTH_URL` from the
+public-demo checklist above. Isolated demo mode has a public, read-only fallback
 signing key so a missing secret cannot take the sample site offline; that
 fallback is not suitable for database-backed accounts.
 
@@ -255,9 +277,12 @@ dashboard lists/forms, sample records, and rejected property/tenant/payment/
 expense/profile writes. CI runs the production build, `npm test`, and these
 demo smoke checks on pull requests and pushes to `main`.
 
-The public demo uses bundled fixtures, not a live or seeded database. A
-database-backed deployment, its credentials, migration baseline, and the live
-Vercel deployment must be verified separately before real landlord use.
+The public demo uses bundled fixtures, not a live or seeded database. The
+isolated seeded-database deployment described in issue #9 is not provided by
+this fixture-backed demo. A database-backed deployment, its credentials,
+migration baseline, and the live Vercel deployment must be verified separately
+before real landlord use. Do not connect the public demo to a database
+containing real tenants.
 
 ## License
 
