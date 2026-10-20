@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { CreditCard, Plus, Search, X, MessageCircle } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
+import { useIsDemoUser } from "@/components/DemoMode";
 
-type Payment = { id: string; amount: number; status: string; month: string; date: string; tenant: { fullName: string; unitNumber: string; property: { name: string } } };
+type Payment = { id: string; amount: number; status: string; month: string; date: string; receiptNumber?: string | null; tenant: { fullName: string; unitNumber: string; property: { name: string } } };
 type Tenant = { id: string; fullName: string; unitNumber: string; property: { name: string } };
 
 const STATUSES = ["PAID", "PENDING", "OVERDUE"] as const;
@@ -23,6 +24,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function PaymentsPage() {
+  const isDemo = useIsDemoUser();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,13 +119,13 @@ export default function PaymentsPage() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Payments</h1>
           <p className="text-slate-500 mt-2 text-lg">Track rent payments and history.</p>
         </div>
-        <button
+        {!isDemo && <button
           onClick={() => setShowRecord(true)}
           className="bg-violet-600 hover:bg-violet-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-md shadow-violet-200 flex items-center transition-all"
         >
           <Plus size={20} className="mr-2" />
           Record Payment
-        </button>
+        </button>}
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -151,12 +153,12 @@ export default function PaymentsPage() {
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-2">No payments recorded</h3>
             <p className="text-slate-500 max-w-sm mb-8 text-lg">You haven&apos;t logged any rent payments yet.</p>
-            <button
+            {!isDemo && <button
               onClick={() => setShowRecord(true)}
               className="bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800 px-6 py-3 rounded-xl font-semibold transition-colors"
             >
               Record First Payment
-            </button>
+            </button>}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -176,6 +178,7 @@ export default function PaymentsPage() {
                     <td className="px-8 py-5">
                       <div className="font-bold text-slate-900 text-base">{new Date(payment.date).toLocaleDateString()}</div>
                       <div className="text-slate-500 font-medium text-sm">For: {payment.month}</div>
+                      {payment.receiptNumber && <div className="text-xs font-semibold text-emerald-700">Sample receipt · Reçu fictif {payment.receiptNumber}</div>}
                     </td>
                     <td className="px-8 py-5">
                       <div className="text-slate-900 font-bold text-base">{payment.tenant?.fullName}</div>
@@ -200,12 +203,12 @@ export default function PaymentsPage() {
                           Receipt
                         </a>
                       )}
-                      <button
+                      {!isDemo && <button
                         onClick={() => openEdit(payment)}
                         className="text-violet-600 hover:text-violet-800 text-sm font-bold transition-colors"
                       >
                         Edit
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 ))}

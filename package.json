@@ -9,6 +9,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "smoke:demo": "node scripts/smoke-demo.mjs",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate"

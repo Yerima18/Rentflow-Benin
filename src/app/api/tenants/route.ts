@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { demoReadOnlyResponse, isDemoMode, isDemoSession } from '@/lib/demo';
+import { demoTenants } from '@/lib/demo-data';
 
 export async function GET(request: Request) {
   try {
@@ -12,6 +14,13 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get('propertyId');
+
+    if (isDemoMode() || isDemoSession(session)) {
+      const tenants = propertyId
+        ? demoTenants.filter((tenant) => tenant.propertyId === propertyId)
+        : demoTenants;
+      return NextResponse.json(tenants);
+    }
 
     const whereClause: { property: { landlordId: string }, propertyId?: string } = {
       property: {
@@ -45,6 +54,7 @@ export async function POST(request: Request) {
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (isDemoSession(session)) return demoReadOnlyResponse();
 
     const body = await request.json();
     const { fullName, phone, unitNumber, rentAmount, dueDate, propertyId, leaseStart } = body;

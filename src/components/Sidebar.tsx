@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Building, Users, CreditCard, PieChart, Settings } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import { useIsDemoUser } from "@/components/DemoMode";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { dict } = useLanguage();
+  const isDemo = useIsDemoUser();
 
   const navItems = [
     { name: dict.common.dashboard, href: "/dashboard", icon: LayoutDashboard },
@@ -16,7 +18,7 @@ export default function Sidebar() {
     { name: dict.common.payments, href: "/dashboard/payments", icon: CreditCard },
     { name: dict.common.expenses, href: "/dashboard/expenses", icon: PieChart },
     { name: dict.common.reports, href: "/dashboard/reports", icon: LayoutDashboard },
-    { name: dict.common.settings, href: "/dashboard/settings", icon: Settings },
+    ...(!isDemo ? [{ name: dict.common.settings, href: "/dashboard/settings", icon: Settings }] : []),
   ];
 
   return (
