@@ -17,7 +17,9 @@ function runNpm(args) {
   }
 }
 
-if (process.env.VERCEL_ENV === "production") {
+const demoMode = process.env.DEMO_MODE === "true" || !process.env.DATABASE_URL;
+
+if (process.env.VERCEL_ENV === "production" && !demoMode) {
   runNpm(["run", "db:migrate:deploy"]);
 }
 

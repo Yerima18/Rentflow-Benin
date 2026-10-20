@@ -6,8 +6,10 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { ArrowLeft, Save } from "lucide-react";
 import DatePicker from "@/components/DatePicker";
+import { DemoReadOnlyPanel, useIsDemoUser } from "@/components/DemoMode";
 
 export default function NewExpensePage() {
+  const isDemo = useIsDemoUser();
   const router = useRouter();
   const { dict } = useLanguage();
   const [loading, setLoading] = useState(false);
@@ -55,6 +57,8 @@ export default function NewExpensePage() {
       setLoading(false);
     }
   };
+
+  if (isDemo) return <DemoReadOnlyPanel />;
 
   return (
     <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
